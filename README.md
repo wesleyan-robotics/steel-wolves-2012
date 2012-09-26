@@ -1,2 +1,3 @@
-steel-wolves
-============
+Wesleyan Steel Wolves Robotics Team
+===================================
+More to come...
