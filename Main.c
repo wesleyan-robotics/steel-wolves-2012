@@ -32,6 +32,6 @@ task main()
   {
     getJoystickSettings(joystick);
     motor[motorD] = joystick.joy1_y1 - joystick.joy1_x1;
-    motor[motorE] = joystick.joy1_y2 - joystick.joy1_x2;
+    motor[motorE] = joystick.joy1_y1 + joystick.joy1_x1;
   }
 }
