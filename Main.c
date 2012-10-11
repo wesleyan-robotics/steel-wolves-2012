@@ -32,50 +32,52 @@ void joystickDebug()
 	nxtDisplayCenteredTextLine(7, "Joy2 Y2: %i",joystick.joy2_y2);
 }
 
-int convertJoystickToMotor(int power)
+int convertJoystickToMotor(const int power)
 {
 	return ((power * 100) / 127);
 }
 
-int convertJoystickToMotorAvg(int x, int y)
+int convertJoystickToMotorAvg(const int x, const int y)
 {
 	return ((((x + y) / 2) * 100) / 127);
 }
 
 void setDirection()
 {
-	int xDirection = 0;
-	int yDirection = 0;
+	int x = joystick.joy1_x1;
+	int y = joystick.joy1_y1;
 
-	// Get the directions and the powers
-	if (joystick.joy1_x1 > 0) // Right
-	{
-		xDirection = ConvertJoystickToMotor(joystick.joy1_x1);
-	}
-	else // Left
-	{
-		xDirection = ConvertJoystickToMotor(-1 * joystick.joy1_x1);
-	}
+	int isForward = 0;
 
-	if (joystick.joy1_y1 > 0) // Forward
+	if (y > 0)
 	{
-		yDirection = 1;
+		isForward = 1;
 	}
-	else // Backwards
+	else
 	{
-		yDirection = -1;
+		isForward = -1;
 	}
 
-	// Set the motors to the powers
-  motor[RightWheel] = (yDirection * xDirection / 10);
-  motor[LeftWheel] = (yDirection * xDirection / 10);
-}
-
-void setDeadZones()
-{
-	// Set dead-zones if
-	if((joystick.joy1_y1 <= 5) && (joystick.joy1_y1 >= -5)) { joystick.joy1_y1 = 0; }
-	if((joystick.joy1_x1 <= 5) && (joystick.joy1_x1 >= -5)) { joystick.joy1_y1 = 0; }
+	// Forward dead-zone
+	if (x > -25 && x < 25)
+	{
+		motor[RightWheel] = y;
+		motor[LeftWheel] = y;
+	}
+	else
+		{
+		// Get the directions and the powers
+		if (x > 0) // Right
+		{
+			motor[RightWheel] = x * isForward * y;
+			motor[LeftWheel] = x * isForward * (y/100);
+		}
+		else // Left
+		{
+			motor[RightWheel] = x * isForward * (y/100);
+			motor[LeftWheel] = x * isForward * y;
+		}
+	}
 }
 
 task main()
@@ -96,10 +98,7 @@ task main()
 	{
 		getJoystickSettings(joystick);
 
-		setDeadZones();
-		setDirectionX();
-		setDirectionY();
-
+		setDirection();
 		joystickDebug();
 	}
 }
