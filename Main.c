@@ -10,7 +10,6 @@
 
 //#include "HTMAG-driver.h"
 #include "JoystickDriver.c"  //Include file to "handle" the Bluetooth messages.
-#include "JoystickUtil.c"
 
 const int DEADZONE = 5;
 const int ACCORDION_SPEED = 7;
@@ -79,7 +78,7 @@ void setDirectionFromJoystickOLD()
  * LEFT Joystick  - Moves forward and backward
  * RIGHT Joystick - Moves left and right
  */
-void setDiretionFromJoystick()
+void setDirectionFromJoystick()
 {
 	int lWheel;
 	int rWheel;
