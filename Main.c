@@ -12,7 +12,7 @@
 #include "JoystickDriver.c"  //Include file to "handle" the Bluetooth messages.
 
 const int DEADZONE = 5;
-const int ACCORDION_SPEED = 7;
+const int ACCORDION_SPEED = 80;
 
 void initializeRobot()
 {
@@ -85,17 +85,15 @@ void setDirectionFromJoystick()
 	int vertical = joystick.joy1_y1;
 	int horizontal = joystick.joy1_x2;
 
-	if(isInDeadzone(vertical)) return;
+	if(isInDeadzone(vertical))
+	{
+		setPower(0);
+		return;
+	}
 	setInDeadzone(&horizontal);
 
-	if(horizontal < 0) // left
-	{
-		lWheel = vertical + horizontal;
-		rWheel = vertical - horizontal;
-	} else { // right
-		lWheel = vertical - horizontal;
-		rWheel = vertical + horizontal;
-	}
+	lWheel = (vertical + horizontal) * 0.75;
+	rWheel = (vertical - horizontal) * 0.75;
 
 	setPower(lWheel, rWheel);
 }
@@ -103,9 +101,9 @@ void setDirectionFromJoystick()
 void setAccordionFromJoystick()
 {
 	// Increase 90 deg
-	if (joy1Btn(1))
+	if (joystick.joy1_TopHat == 0)
 		motor[accordion] = ACCORDION_SPEED;
-	else if (joy1Btn(2))
+	else if (joystick.joy1_TopHat == 4)
 		motor[accordion] = -ACCORDION_SPEED;
 	else
 		motor[accordion] = 0;
