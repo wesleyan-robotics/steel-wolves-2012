@@ -95,7 +95,7 @@ void setDiretionFromJoystick()
 		rWheel = vertical - horizontal;
 	} else { // right
 		lWheel = vertical - horizontal;
-		rWheel = vertical - horizontal;
+		rWheel = vertical + horizontal;
 	}
 
 	setPower(lWheel, rWheel);
@@ -107,7 +107,7 @@ void setAccordionFromJoystick()
 	if (joy1Btn(1))
 		motor[accordion] = ACCORDION_SPEED;
 	else if (joy1Btn(2))
-		motor[accordion] = -1 * ACCORDION_SPEED;
+		motor[accordion] = -ACCORDION_SPEED;
 	else
 		motor[accordion] = 0;
 }
