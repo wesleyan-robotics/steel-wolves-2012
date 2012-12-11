@@ -14,9 +14,13 @@
 
 #include "Motor.h"
 #include "Joystick.h"
+#include "SonarScanner.h"
 
-const int ACCORDION_SPEED = 80;
+const int ACCORDION_SPEED = 5;
 const float SPEED_LIMIT_FACTOR = 0.75;
+
+const int TOPHAT_UP   = 0;
+const int TOPHAT_DOWN = 4;
 
 void initializeRobot()
 {
@@ -73,26 +77,32 @@ void setDirectionFromJoystick()
 void setAccordionFromJoystick()
 {
 	// Increase 90 deg
-	if (joystick.joy1_TopHat == 0)
-		motor[accordion] = ACCORDION_SPEED;
-	else if (joystick.joy1_TopHat == 4)
-		motor[accordion] = -ACCORDION_SPEED;
-	else
-		motor[accordion] = 0;
+	if (joystick.joy1_TopHat == TOPHAT_UP) {
+		motor[accordion]  = ACCORDION_SPEED;
+		motor[rightWheel] = ACCORDION_SPEED;
+    } else if (joystick.joy1_TopHat == TOPHAT_DOWN) {
+		motor[accordion]  = -ACCORDION_SPEED;
+		motor[rightWheel] = -ACCORDION_SPEED;
+    } else {
+		motor[accordion]  = 0;
+		motor[rightWheel] = 0;
+    }
 }
 
 task main()
 {
 	initializeRobot();
-    initMotors(leftWheel, rightWheel);
+    initMotors(leftWheel, rightWheel, leftWheel);
+    initSonars(sonarLow, sonarHigh);
 
-	waitForStart();
+    waitForStart();
 	while(true)
 	{
 		getJoystickSettings(joystick);
 
 		setDirectionFromJoystick();
 		setAccordionFromJoystick();
-		displayJoystickDebug();
+		//displayJoystickDebug();
+		displaySonarDebug();
 	}
 }
