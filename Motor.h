@@ -35,12 +35,17 @@ int leftMotor = -1;
 int rightMotor = -1;
 
 /**
+ * The ID of the motor that has the encoder on it
+ */
+int motorEncoder = -1;
+
+/**
  * Initialized the motors. Must be called before other functions are used.
  *
  * @param left The ID of the left motor.
  * @param right The ID of the right motor.
  */
-void initMotors(int left, int right)
+void initMotors(int left, int right, int motorEncoder)
 {
 	leftMotor = left;
 	rightMotor = right;
@@ -72,14 +77,13 @@ void setPower(int left, int right)
 /**
  * Resets the motor encoder and then sets its target value.
  *
- * @param motorID The motor being changed.
  * @param target The motor encoder's target in degress to reach.
  */
-void setEncoderTarget(int motorID, int target)
+void setEncoderTarget(int target)
 {
 	// Reset value and set target
-	nMotorEncoder[motorID] = 0;
-	nMotorEncoderTarget[motorID] = target;
+	nMotorEncoder[motorEncoder] = 0;
+	nMotorEncoderTarget[motorEncoder] = target;
 }
 
 /**
@@ -96,7 +100,7 @@ void reachTargetAtDualPower(int power)
 	// Set speed and run to degrees
 	setPower(power);
 	// Wait until target is reached
-	while(nMotorRunState[leftMotor] != runStateHoldPosition) { }
+	while(nMotorRunState[motorEncoder] != runStateHoldPosition) { }
 	setPower(0);
 }
 
@@ -106,6 +110,9 @@ void reachTargetAtDualPower(int power)
  * Runs at the power specified until the motor encoder's target has
  * been reached using the specified motor.
  *
+ * NOTE: THIS REQUIRES TO HAVE A MOTOR ENCODER ON BOTH THE MOTORS TO BE ABLE TO
+ *       TURN USING BOTH MOTORS
+ *
  * @param motorID The motor to run.
  * @param power The power to run at while the target has not been reached.
  */
@@ -114,7 +121,7 @@ void reachTargetAtPower(int motorID, int power)
 	// Set speed and run to degrees
 	motor[motorID] = power;
 	// Wait until target is reached
-	while(nMotorRunState[motorID] != runStateHoldPosition) { }
+	while(nMotorRunState[motorEncoder] != runStateHoldPosition) { }
 	motor[motorID] = 0;
 }
 
@@ -146,7 +153,7 @@ float convertInchesToDeg(float inches)
  */
 void moveInDeg(int power, float deg)
 {
-	setEncoderTarget(leftMotor, round(deg));
+	setEncoderTarget(round(deg));
 	reachTargetAtDualPower(power);
 }
 
@@ -185,7 +192,7 @@ void pointTurn(Wheel stopWheel, int deg, int power)
     	moveMotor = rightMotor;
     }
 
-	setEncoderTarget(moveMotor, deg);
+	setEncoderTarget(deg);
 	motor[stopMotor] = 0;
 	reachTargetAtPower(moveMotor, power);
 }
