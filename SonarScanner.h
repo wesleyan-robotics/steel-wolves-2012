@@ -19,10 +19,28 @@ int highSensor = -1;
  * @param lower The ID of the lower sensor.
  * @param higher The ID of the higher sensor.
  */
-void initSonars(int lower, int higher)
+void initSonars(int low, int high)
 {
-	lowSensor = lower;
-	highSensor = higher;
+	lowSensor = low;
+	highSensor = high;
+}
+
+bool anyDetection()
+{
+    return (SensorValue[lowSensor] & SensorValue[highSensor]) == 255;
+}
+
+void sonarScan()
+{
+    setPower(50);
+    while (!anyDetection()) { }
+    setPower(0);
+}
+
+void displaySonarDebug()
+{
+	nxtDisplayTextLine(0, "Low Sonar : (%i)", SensorValue[lowSensor]);
+	nxtDisplayTextLine(1, "High Sonar: (%i)", SensorValue[highSensor]);
 }
 
 #endif
