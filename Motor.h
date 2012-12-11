@@ -40,7 +40,7 @@ int rightMotor = -1;
 int motorEncoder = -1;
 
 /**
- * Initialized the motors. Must be called before other functions are used.
+ * Initializes the motors. Must be called before other functions are used.
  *
  * @param left The ID of the left motor.
  * @param right The ID of the right motor.
@@ -186,10 +186,10 @@ void pointTurn(Wheel stopWheel, int deg, int power)
 		stopMotor = rightMotor;
 		moveMotor = leftMotor;
 	}
-    else
-    {
-    	stopMotor = leftMotor;
-    	moveMotor = rightMotor;
+	else
+	{
+		stopMotor = leftMotor;
+		moveMotor = rightMotor;
     }
 
 	setEncoderTarget(deg);
