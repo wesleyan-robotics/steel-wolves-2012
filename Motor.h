@@ -9,6 +9,11 @@ typedef enum {
 	RIGHT_WHEEL
 } Wheel;
 
+typedef enum {
+	RIGHT,
+	LEFT
+} TurnDirection;
+
 /**
  * The diameter of the wheel in inches
  */
@@ -34,17 +39,13 @@ int leftMotor = -1;
  */
 int rightMotor = -1;
 
-/**
-<<<<<<< HEAD
+/*
  * The ID of the motor that has the encoder on it
  */
 int motorEncoder = -1;
 
 /**
  * Initializes the motors. Must be called before other functions are used.
-=======
- * Initialized the motors. Must be called before other functions are used.
->>>>>>> parent of 00add19... Changes with the new sonic sensors.
  *
  * @param left The ID of the left motor.
  * @param right The ID of the right motor.
@@ -197,6 +198,40 @@ void pointTurn(Wheel stopWheel, int deg, int power)
 	setEncoderTarget(moveMotor, deg);
 	motor[stopMotor] = 0;
 	reachTargetAtPower(moveMotor, power);
+}
+
+
+void startTurnTiming(TurnDirection dir, int power)
+{
+	int moveMotor;
+	int stopMotor;
+
+	if (dir == RIGHT)
+	{
+		stopMotor = rightMotor;
+		moveMotor = leftMotor;
+	}
+	else
+	{
+		stopMotor = leftMotor;
+		moveMotor = rightMotor;
+    }
+
+    motor[stopMotor] = 0;
+	motor[moveMotor] = power;
+}
+
+/**
+ * Turns with a wheel idle.
+ *
+ * @param ms The amount in milliseconds to turn
+ * @param power The power to turn with
+ */
+void pointTurnTiming(TurnDirection dir, int ms, int power)
+{
+	startTurnTiming(dir, power);
+	wait1Msec(ms);
+	setPower(0);
 }
 
 #endif
