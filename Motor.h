@@ -74,8 +74,8 @@ void setPower(int power)
  */
 void setPower(int left, int right)
 {
-	motor[rightMotor] = left;
-	motor[leftMotor] = right;
+	motor[leftMotor] = left;
+	motor[rightMotor] = right;
 }
 
 /**
