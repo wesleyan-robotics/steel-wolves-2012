@@ -32,17 +32,17 @@ const float ROTATION_DEG = 360.0;
 /**
  * The ID of the left motor.
  */
-int leftMotor = -1;
+int LeftMotor = -1;
 
 /**
  * The ID of the right motor.
  */
-int rightMotor = -1;
+int RightMotor = -1;
 
 /*
  * The ID of the motor that has the encoder on it
  */
-int motorEncoder = -1;
+int MotorEncoder = -1;
 
 /**
  * Initializes the motors. Must be called before other functions are used.
@@ -52,8 +52,8 @@ int motorEncoder = -1;
  */
 void initMotors(int left, int right)
 {
-	leftMotor = left;
-	rightMotor = right;
+	LeftMotor = left;
+	RightMotor = right;
 }
 
 /**
@@ -63,8 +63,8 @@ void initMotors(int left, int right)
  */
 void setPower(int power)
 {
-	motor[rightMotor] = power;
-	motor[leftMotor] = power;
+	motor[RightMotor] = power;
+	motor[LeftMotor] = power;
 }
 
 /**
@@ -75,8 +75,8 @@ void setPower(int power)
  */
 void setPower(int left, int right)
 {
-	motor[leftMotor] = left;
-	motor[rightMotor] = right;
+	motor[LeftMotor] = left;
+	motor[RightMotor] = right;
 }
 
 /**
@@ -106,7 +106,7 @@ void reachTargetAtDualPower(int power)
 	// Set speed and run to degrees
 	setPower(power);
 	// Wait until target is reached
-	while(nMotorRunState[leftMotor] != runStateHoldPosition) { }
+	while(nMotorRunState[LeftMotor] != runStateHoldPosition) { }
 	setPower(0);
 }
 
@@ -156,7 +156,7 @@ float convertInchesToDeg(float inches)
  */
 void moveInDeg(int power, float deg)
 {
-	setEncoderTarget(leftMotor, round(deg));
+	setEncoderTarget(LeftMotor, round(deg));
 	reachTargetAtDualPower(power);
 }
 
@@ -186,13 +186,13 @@ void pointTurn(Wheel stopWheel, int deg, int power)
 
 	if (stopWheel == RIGHT_WHEEL)
 	{
-		stopMotor = rightMotor;
-		moveMotor = leftMotor;
+		stopMotor = RightMotor;
+		moveMotor = LeftMotor;
 	}
 	else
 	{
-		stopMotor = leftMotor;
-		moveMotor = rightMotor;
+		stopMotor = LeftMotor;
+		moveMotor = RightMotor;
     }
 
 	setEncoderTarget(moveMotor, deg);
@@ -208,13 +208,13 @@ void startTurnTiming(TurnDirection dir, int power)
 
 	if (dir == RIGHT)
 	{
-		stopMotor = rightMotor;
-		moveMotor = leftMotor;
+		stopMotor = RightMotor;
+		moveMotor = LeftMotor;
 	}
 	else
 	{
-		stopMotor = leftMotor;
-		moveMotor = rightMotor;
+		stopMotor = RightMotor;
+		moveMotor = RightMotor;
     }
 
     motor[stopMotor] = 0;

@@ -4,12 +4,12 @@
 /**
  * The ID of the lower sensor.
  */
-int lowSensor = -1;
+int LowSensor = -1;
 
 /**
  * The ID of the high sensor.
  */
-int highSensor = -1;
+int HighSensor = -1;
 
 /**
  * Initializes the sonar sensors. Must be called before other functions are used.
@@ -19,12 +19,12 @@ int highSensor = -1;
  */
 void initSonars(int lower, int higher)
 {
-	lowSensor = lower;
-	highSensor = higher;
+	LowSensor = lower;
+	HighSensor = higher;
 }
 
-int bottomDistance()  { return SensorValue[lowSensor]; }
-int topDistance()     { return SensorValue[highSensor]; }
+int bottomDistance()  { return SensorValue[LowSensor]; }
+int topDistance()     { return SensorValue[HighSensor]; }
 bool bottomDetected() { return bottomDistance() < 60 && topDistance() > 40; }
 bool topDetected()    { return topDistance() < 100; }
 
@@ -34,9 +34,19 @@ void startScan()
 	int distanceTime = 4000;
 
 	// Go forward until bottom bar detected
-	setPower(50);
-	while (!bottomDetected()) { writeDebugStreamLine("%i", bottomDistance()); }
-	setPower(0);
+	//setPower(10);
+	while (true) {
+		int b = bottomDistance();
+		if (bottomDetected()) {
+			writeDebugStreamLine("true - %i", b);
+		} else {
+			writeDebugStreamLine("false - %i", b);
+		}
+		wait1Msec(1000);
+	}
+	//setPower(0);
+
+	return;
 
 	// Turn to the left around 90 degrees
 	ClearTimer(T1);
@@ -59,8 +69,8 @@ void startScan()
 
 void displaySonarDebug()
 {
-	nxtDisplayTextLine(0, "Sonar Top   : %i", SensorValue[highSensor]);
-	nxtDisplayTextLine(1, "Sonar Bottom: %i", SensorValue[lowSensor]);
+	nxtDisplayTextLine(0, "Sonar Top   : %i", SensorValue[HighSensor]);
+	nxtDisplayTextLine(1, "Sonar Bottom: %i", SensorValue[LowSensor]);
 }
 
 #endif
