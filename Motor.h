@@ -1,17 +1,9 @@
 #ifndef MOTOR_H
 #define MOTOR_H
 
-/**
- * Identifies the wheel.
- */
 typedef enum {
-	LEFT_WHEEL,
-	RIGHT_WHEEL
-} Wheel;
-
-typedef enum {
-	RIGHT,
-	LEFT
+	LEFT,
+	RIGHT
 } TurnDirection;
 
 /**
@@ -38,11 +30,6 @@ int LeftMotor = -1;
  * The ID of the right motor.
  */
 int RightMotor = -1;
-
-/*
- * The ID of the motor that has the encoder on it
- */
-int MotorEncoder = -1;
 
 /**
  * Initializes the motors. Must be called before other functions are used.
@@ -179,12 +166,12 @@ void moveInInches(int power, float inches)
  * @param deg The amount in degrees to turn.
  * @param power The power to turn with
  */
-void pointTurn(Wheel stopWheel, int deg, int power)
+void pointTurn(TurnDirection dir, int deg, int power)
 {
 	int moveMotor;
 	int stopMotor;
 
-	if (stopWheel == RIGHT_WHEEL)
+	if (dir == RIGHT)
 	{
 		stopMotor = RightMotor;
 		moveMotor = LeftMotor;
@@ -200,8 +187,7 @@ void pointTurn(Wheel stopWheel, int deg, int power)
 	reachTargetAtPower(moveMotor, power);
 }
 
-
-void startTurnTiming(TurnDirection dir, int power)
+void turn(TurnDirection dir, int power)
 {
 	int moveMotor;
 	int stopMotor;
@@ -229,7 +215,7 @@ void startTurnTiming(TurnDirection dir, int power)
  */
 void pointTurnTiming(TurnDirection dir, int ms, int power)
 {
-	startTurnTiming(dir, power);
+	turn(dir, power);
 	wait1Msec(ms);
 	setPower(0);
 }
