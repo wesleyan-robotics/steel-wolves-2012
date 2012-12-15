@@ -1,7 +1,6 @@
 #ifndef JOYSTICK_H
 #define JOYSTICK_H
 
-
 const int DEADZONE = 5;
 const float SPEED_LIMIT_FACTOR = 0.75;
 
@@ -27,9 +26,9 @@ int convertJoystickToMotor(const int power)
 	return ((power * 100) / 127);
 }
 
-bool inDeadzone(const int y)
+bool inDeadzone(const int x)
 {
-	if (y < DEADZONE && y > -DEADZONE) return true;
+	if (x < DEADZONE && x > -DEADZONE) return true;
 	else return false;
 }
 
@@ -76,6 +75,25 @@ void setAccordionFromJoystick()
 		default:
 			stopAccordion();
 			break;
+	}
+}
+
+task drive() {
+	while(true)
+	{
+		getJoystickSettings(joystick);
+		if (DRIVING_ENABLED)   { setDirectionFromJoystick(); }
+		if (ACCORDION_ENABLED) { setAccordionFromJoystick(); }
+		displaySonarDebug();
+	}
+}
+
+task joystickWakeup() {
+	while (true) {
+		if (!inDeadzone(joystick.joy1_x1) || !inDeadzone(joy1_y1)) {
+			StopTask(sonarScan);
+			StartTask(drive);
+		}
 	}
 }
 

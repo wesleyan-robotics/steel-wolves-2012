@@ -102,9 +102,8 @@ void placeRingOn(PegLevel level)
 	setPower(0);
 }
 
-void startScan()
+task sonarScan()
 {
-	bool bothDetected = false;
 	int turnTime = 4000;
 
 	while (true) {
