@@ -45,7 +45,7 @@ void setDirectionFromJoystick()
 
 	if (inDeadzone(vertical) && inDeadzone(horizontal))
 	{
-		setpower(0);
+		setPower(0);
 		return;
 	} else if (!inDeadzone(horizontal)) {
 			vertical = 5;
