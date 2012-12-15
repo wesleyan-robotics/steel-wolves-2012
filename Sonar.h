@@ -87,7 +87,7 @@ void placeRingOn(PegLevel level)
 	waitSensor(s, ACCORDION_DISTANCE);
 	setPower(0);
 	raiseAccordion();
-	wait1Msec(4000);
+	wait1Msec(1000);
 	stopAccordion();
 
 	// Place the peg
@@ -98,7 +98,7 @@ void placeRingOn(PegLevel level)
 	setPower(-10);
 	waitSensor(s, ACCORDION_DISTANCE);
 	lowerAccordion();
-	wait1Msec(2000);
+	wait1Msec(750);
 	setPower(0);
 }
 

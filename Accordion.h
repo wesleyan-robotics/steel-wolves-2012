@@ -1,8 +1,8 @@
 #ifndef ACCORDION_H
 #define ACCORDION_H
 
-const int ACCORDION_SPEED_UP   = 80;
-const int ACCORDION_SPEED_DOWN = 60;
+const int ACCORDION_SPEED_UP   = 60;
+const int ACCORDION_SPEED_DOWN = 30;
 const float ACCORDION_RATIO = 3.3921; /* Ratio between rotations from the small gear to the bigger gear */
 
 int BottomAccordion = -1;

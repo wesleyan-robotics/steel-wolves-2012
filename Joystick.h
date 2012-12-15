@@ -43,17 +43,12 @@ void setDirectionFromJoystick()
 	int vertical = convertJoystickToMotor(joystick.joy1_y1);
 	int horizontal = convertJoystickToMotor(joystick.joy1_x2);
 
-	if (inDeadzone(vertical))
+	if (inDeadzone(vertical) && inDeadzone(horizontal))
 	{
-		if (!inDeadzone(horizontal)) {
+		setpower(0);
+		return;
+	} else if (!inDeadzone(horizontal)) {
 			vertical = 5;
-		} else {
-			setPower(0);
-			return;
-		}
-	}
-	if (inDeadzone(horizontal)) {
-		horizontal = 0;
 	}
 
 	lWheel = (vertical + horizontal) * SPEED_LIMIT_FACTOR;
@@ -78,22 +73,13 @@ void setAccordionFromJoystick()
 	}
 }
 
-task drive() {
+void drive() {
 	while(true)
 	{
 		getJoystickSettings(joystick);
 		if (DRIVING_ENABLED)   { setDirectionFromJoystick(); }
 		if (ACCORDION_ENABLED) { setAccordionFromJoystick(); }
 		displaySonarDebug();
-	}
-}
-
-task joystickWakeup() {
-	while (true) {
-		if (!inDeadzone(joystick.joy1_x1) || !inDeadzone(joy1_y1)) {
-			StopTask(sonarScan);
-			StartTask(drive);
-		}
 	}
 }
 
