@@ -123,30 +123,46 @@ void setSpeedFromJoystick() {
 	}
 }
 
+void setTurnInPlaceFromJoystick()
+{
+	int lWheel = 0;
+	int rWheel = 0;
+	int horizontal = convertJoystickToMotor(joystick.joy1_x1);
+
+	TurnDirection dir = getDirection(horizontal);
+	switch (dir) {
+		case LEFT:
+			lWheel = -horizontal;
+			rWheel = horizontal;
+			break;
+		case RIGHT:
+			lWheel = horizontal;
+			rWheel = -horizontal;
+			break;
+	}
+
+	setPower(lWheel, rWheel);
+}
+
 void drive()
 {
 	while(true) {
 		getJoystickSettings(joystick);
+
 		if (DRIVING_ENABLED) {
 			setSpeedFromJoystick();
-			setDirectionFromJoystick();
+			if (joy1Btn(BUTTON_A)) {
+				setTurnInPlaceFromJoystick();
+			} else {
+				setDirectionFromJoystick();
+			}
 		}
+
 		if (ACCORDION_ENABLED) {
 			setAccordionFromJoystick();
 		}
+
 		displaySonarDebug();
 	}
-}
-
-void displayJoystickDebug()
-{
-	nxtDisplayTextLine(0, "Joy1: (%i, %i)", joystick.joy1_x1, joystick.joy1_y1);
-	nxtDisplayTextLine(1, "Joy2: (%i, %i)", joystick.joy1_y2, joystick.joy1_x2);
-	nxtDisplayTextLine(2, "Joy1: Buttons:");
-	nxtDisplayTextLine(3, " 1:%i 2:%i 3:%i 4:%i", joy1Btn(1), joy1Btn(2), joy1Btn(3), joy1Btn(4));
-	nxtDisplayTextLine(4, " 5:%i 6:%i 7:%i 8:%i", joy1Btn(5), joy1Btn(6), joy1Btn(7), joy1Btn(8));
-	nxtDisplayTextLine(5, " 9:%i 10:%i 11:%i", joy1Btn(9), joy1Btn(10), joy1Btn(11));
-	nxtDisplayTextLine(6, " 12:%i", joy1Btn(12));
-	nxtDisplayTextLine(7, "Joy2 TopHat: %i", joystick.joy1_TopHat);
 }
 #endif
