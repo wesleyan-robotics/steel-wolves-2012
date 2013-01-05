@@ -1,11 +1,6 @@
 #ifndef MOTOR_H
 #define MOTOR_H
 
-typedef enum {
-	LEFT,
-	RIGHT
-} TurnDirection;
-
 /**
  * The diameter of the wheel in inches
  */
@@ -30,6 +25,27 @@ int LeftMotor = -1;
  * The ID of the right motor.
  */
 int RightMotor = -1;
+
+typedef enum {
+	LEFT,
+	RIGHT
+} TurnDirection;
+
+/**
+ * Gets the direction from a horizontal value where
+ * a positive value is going forward and
+ * a negative value is going backwards.
+ *
+ * @param value The horizontal value representing the direction
+ */
+TurnDirection getDirection(int horizontal)
+{
+	if (horizontal < 0) {
+		return LEFT;
+	} else {
+		return RIGHT;
+	}
+}
 
 /**
  * Initializes the motors. Must be called before other functions are used.
