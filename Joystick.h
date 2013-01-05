@@ -3,10 +3,6 @@
 
 const int DEADZONE = 5;
 
-const float NORMAL_SPEED_FACTOR = 0.75;
-const float FULL_SPEED_FACTOR = 1.0;
-const float LOW_SPEED_FACTOR = 0.5;
-
 float currentSpeed = NORMAL_SPEED_FACTOR;
 
 typedef enum {
@@ -29,6 +25,16 @@ typedef enum {
 	BUTTON_LEFT_TRIGGER = 6,
 	BUTTON_RIGHT_TRIGGER = 7
 } JoystickButtons;
+
+typedef enum {
+	AUTONOMOUS_MODE = 0,
+	TELEOP_MODE = 1
+} MatchState;
+
+typedef enum {
+	ENABLED = 0,
+	DISABLED = 1
+} StateEnabled;
 
 /**
  * Converts the joystick amount to a motor amount out of 100.
@@ -144,25 +150,55 @@ void setTurnInPlaceFromJoystick()
 	setPower(lWheel, rWheel);
 }
 
-void drive()
+void teleop() {
+	if (DRIVING_ENABLED || MATCH_BUILD) {
+		setSpeedFromJoystick();
+
+		if (joy1Btn(BUTTON_A)) {
+			setTurnInPlaceFromJoystick();
+		} else {
+			setDirectionFromJoystick();
+		}
+	}
+
+	if (ACCORDION_ENABLED || MATCH_BUILD) {
+		setAccordionFromJoystick();
+	}
+
+	writeDebugStreamLine("Teleop called");
+}
+
+void startMatch()
 {
+	writeDebugStreamLine("Match has been called");
 	while(true) {
 		getJoystickSettings(joystick);
 
-		if (DRIVING_ENABLED) {
-			setSpeedFromJoystick();
-			if (joy1Btn(BUTTON_A)) {
-				setTurnInPlaceFromJoystick();
-			} else {
-				setDirectionFromJoystick();
+		writeDebugStreamLine("UserMode: %i", joystick.UserMode);
+		writeDebugStreamLine("StopPgm:  %i", joystick.StopPgm);
+		if ((joystick.UserMode == AUTONOMOUS_MODE && TESTING_AUTONOMOUS) || MATCH_BUILD)
+			if (joystick.StopPgm == (bool)ENABLED) {
+				writeDebugStreamLine("Autonomous enabled");
+				if (!isAutonomousStarted) {
+					StartTask(autonomous);
+					isAutonomousStarted = true;
+				}
+			}
+		} else if ((joystick.UserMode == TELEOP_MODE && TESTING_TELEOP) || MATCH_BUILD)
+			if (joystick.StopPgm == (bool)ENABLED) {
+				writeDebugStreamLine("Teleop enabled");
+				if (isAutonomousStarted) {
+					StopTask(autonomous);
+					isAutonomousStarted = false;
+				}
+				teleop();
 			}
 		}
 
-		if (ACCORDION_ENABLED) {
-			setAccordionFromJoystick();
-		}
-
 		displaySonarDebug();
+
+		// Wait for the next packet to come in
+		wait1Msec(50);
 	}
 }
 #endif

@@ -1,6 +1,18 @@
 #ifndef MOTOR_H
 #define MOTOR_H
 
+const float NORMAL_SPEED_FACTOR = 0.75;
+const float FULL_SPEED_FACTOR = 1.0;
+const float LOW_SPEED_FACTOR = 0.5;
+const float AUTONOMOUS_SPEED_FACTOR = LOW_SPEED_FACTOR;
+const float RING_PLACEMENT_SPEED_FACTOR = 0.2;
+
+const int FULL_SPEED = 100;
+const int NORMAL_SPEED = 100 * NORMAL_SPEED_FACTOR;
+const int LOW_SPEED = 100 * LOW_SPEED_FACTOR;
+const int AUTONOMOUS_SPEED = 100 * AUTONOMOUS_SPEED_FACTOR;
+const int RING_PLACEMENT_SPEED = 100 * RING_PLACEMENT_SPEED_FACTOR;
+
 /**
  * The diameter of the wheel in inches
  */
@@ -220,6 +232,26 @@ void turn(TurnDirection dir, int power)
     }
 
     motor[stopMotor] = 0;
+	motor[moveMotor] = power;
+}
+
+void turn(TurnDirection dir, int power, float percentage)
+{
+	int moveMotor;
+	int stopMotor;
+
+	if (dir == RIGHT)
+	{
+		stopMotor = RightMotor;
+		moveMotor = LeftMotor;
+	}
+	else
+	{
+		stopMotor = RightMotor;
+		moveMotor = RightMotor;
+    }
+
+    motor[stopMotor] = power * percentage;
 	motor[moveMotor] = power;
 }
 

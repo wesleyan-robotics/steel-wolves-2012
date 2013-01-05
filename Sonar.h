@@ -1,21 +1,31 @@
 #ifndef SONAR_SCANNER_H
 #define SONAR_SCANNER_H
 
-#define BOTTOM_DISTANCE SensorValue[LowSensor]
-#define TOP_DISTANCE SensorValue[HighSensor]
-#define FULLY_DETECTED detected(BOTTOM_DISTANCE) && detected(TOP_DISTANCE)
+#include "Accordion.h"
+
+#define PEG_VALUE SensorValue[PegSensor]
+#define ACCORDIAN_VALUE SensorValue[AccordionSensor]
+#define LIGHT_VALUE SensorValue[LightSensor]
+#define IS_ON_BOARD (LIGHT_VALUE > HIGH_THRESHOLD && LIGHT_VALUE < LOW_THRESHOLD)
+#define IS_LIGHT_HIGH (LIGHT_VALUE > HIGH_THRESHOLD)
+#define IS_LIGHT_LOW (LIGHT_VALUE < LOW_THRESHOLD)
 
 typedef enum {
-	BOTTOM,
-	MIDDLE,
-	TOP
+	COLLAPSED = 2,
+	BOTTOM = 2,
+	MIDDLE = 6,
+	TOP = -1 // NOTE: We can't get the the third peg
 } PegLevel;
 
-const PegLevel DEFAULT_PLACEMENT = MIDDLE;
+const PegLevel DEFAULT_PEG_PLACEMENT = BOTTOM;
 
 // NOTE: The sonic sensor's distance is measured in cenimeters
-const int ACCORDION_DISTANCE = 20;  // TODO: Actually know when to raise and lower the accordion
-const int PLACE_RING_DISTANCE = 15; // TODO: Ditto
+const int HIGH_THRESHOLD = 80;
+const int LOW_THRESHOLD = 20;
+const int ACCORDION_DISTANCE = 32;
+const int PLACE_RING_DISTANCE = 10;
+
+bool isAutonomousStarted = false;
 
 /**
  * The ID of the bottom sonic sensor.
@@ -45,6 +55,38 @@ void initSonars(int peg, int accordion, int light)
 	LightSensor = light;
 }
 
+void waitUntilSensorGreaterThan(int sensor, int value)
+{
+	while (true) {
+		if (SensorValue[sensor] > value) {
+			break;
+		}
+	}
+}
+
+void waitUntilSensorLessThan(int sensor, int value)
+{
+	while (true) {
+		if (SensorValue[sensor] < value) {
+			break;
+		}
+	}
+}
+
+void setAccordionTo(PegLevel level)
+{
+	// Check that we are not higher first
+	if (ACCORDIAN_VALUE > (int)level) {
+		lowerAccordion();
+		waitUntilSensorLessThan(AccordionSensor, BOTTOM);
+		stopAccordion();
+	} else if (ACCORDIAN_VALUE < (int)level) {
+		raiseAccordion();
+		waitUntilSensorGreaterThan(AccordionSensor, BOTTOM);
+		stopAccordion();
+	}
+}
+
 void waitSensor()
 {
 	// Slow down getting values from sensor
@@ -56,15 +98,44 @@ bool isDetected(int value)
 	return value < 255;
 }
 
-void placeRingOn(PegLevel level)
+void alignToLiftingPosition()
 {
-	// TODO: Write code using the new sonic sensor on the accordion
-	// NOTE: We of cource cannot go to the third peg level
+	// Keep moving on the line until we reach the accordion distance
+	while (PEG_VALUE > ACCORDION_DISTANCE) {
+		if (IS_LIGHT_HIGH) {
+			turn(LEFT, AUTONOMOUS_SPEED, 0.20);
+			waitUntilSensorLessThan(LightSensor, LOW_THRESHOLD);
+		} else if (IS_LIGHT_LOW) {
+			turn(RIGHT, AUTONOMOUS_SPEED, 0.20);
+			waitUntilSensorGreaterThan(LightSensor, HIGH_THRESHOLD);
+		}
+	}
+
+	// Raise up the accordion
+	setAccordionTo(DEFAULT_PEG_PLACEMENT);
+
+	// Drive into the peg to place it
+	setPower(RING_PLACEMENT_SPEED);
+	waitUntilSensorLessThan(PegSensor, PLACE_RING_DISTANCE);
+	setPower(0);
+
+	// Drive back out
+	setPower(-RING_PLACEMENT_SPEED);
+	waitUntilSensorGreaterThan(PegSensor, ACCORDION_DISTANCE);
+	setPower(0);
+
+	// Lower the accordion back down
+	setAccordionTo(COLLAPSED);
 }
 
-task sonarScan()
+task autonomous()
 {
-	// TODO: Write code for the new scanning method
+	// NOTE: We assume we are in the right direction!
+	while(!IS_ON_BOARD) {
+		setPower(AUTONOMOUS_SPEED);
+	}
+
+	alignToLiftingPosition();
 }
 
 void displaySonarDebug()

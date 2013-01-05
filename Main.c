@@ -1,4 +1,7 @@
 #pragma config(Hubs,  S1, HTMotor,  HTMotor,  none,     none)
+#pragma config(Sensor, S2,     LightFloorSensor, sensorLightActive)
+#pragma config(Sensor, S3,     PegSonar,       sensorSONAR)
+#pragma config(Sensor, S4,     AccordianSonar, sensorSONAR)
 #pragma config(Motor,  motorA,           ,             tmotorNXT, openLoop, encoder)
 #pragma config(Motor,  motorB,           ,             tmotorNXT, openLoop, encoder)
 #pragma config(Motor,  motorC,           ,             tmotorNXT, openLoop, encoder)
@@ -11,6 +14,7 @@
 // The "master override" swtich
 #define        MATCH_BUILD  0
 
+#define    TESTING_SENSORS  1
 #define TESTING_AUTONOMOUS  0
 #define     TESTING_TELEOP  1
 #define    DRIVING_ENABLED  1
@@ -19,16 +23,22 @@
 // NOTE: Include EVERYTHING before Joystick.h
 #include "JoystickDriver.c"
 #include "Motor.h"
-#include "Accordion.h"
 #include "Sonar.h"
+#include "Accordion.h"
 #include "Joystick.h"
 
 void initRobot()
 {
     initMotors(LeftWheel, RightWheel);
     initAccordion(AccordionBottom, AccordionTop);
-    // TODO: Add sonars and link to the sonar init
-    initSonars(-1, -1, -1);
+    initSonars(PegSonar, AccordianSonar, LightFloorSensor);
+}
+
+void sensorDebug() {
+	while (true) {
+		writeDebugStreamLine("Light sensor: %i", LightFloorSensor);
+		wait1Msec(100);
+	}
 }
 
 task main()
@@ -36,5 +46,9 @@ task main()
 	initRobot();
 	waitForStart();
 
-	drive();
+	if (TESTING_SENSORS && !MATCH_BUILD) {
+		sensorDebug();
+	} else {
+		startMatch();
+	}
 }
