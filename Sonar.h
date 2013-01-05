@@ -18,14 +18,19 @@ const int ACCORDION_DISTANCE = 20;  // TODO: Actually know when to raise and low
 const int PLACE_RING_DISTANCE = 15; // TODO: Ditto
 
 /**
- * The ID of the lower sensor.
+ * The ID of the bottom sonic sensor.
  */
-int LowSensor = -1;
+int PegSensor = -1;
 
 /**
- * The ID of the high sensor.
+ * The ID of the accordion sonic sensor.
  */
-int HighSensor = -1;
+int AccordionSensor = -1;
+
+/**
+ * The ID of the light sonic sensor.
+ */
+int LightSensor = -1;
 
 /**
  * Initializes the sonar sensors. Must be called before other functions are used.
@@ -33,101 +38,40 @@ int HighSensor = -1;
  * @param lower The ID of the lower sensor.
  * @param higher The ID of the higher sensor.
  */
-void initSonars(int lower, int higher)
+void initSonars(int peg, int accordion, int light)
 {
-	LowSensor = lower;
-	HighSensor = higher;
+	PegSensor = peg;
+	AccordionSensor = accordion;
+	LightSensor = light;
 }
 
-void waitSensor() { wait1Msec(100); } // Slow down getting values from sensor
-bool detected(int value) { return value < 255; }
-
-void waitSensor(int sensor, int min)
+void waitSensor()
 {
-	while (SensorValue[sensor] > min) { }
-	return;
+	// Slow down getting values from sensor
+	wait1Msec(100);
 }
 
-void findBottom(int timeout)
+bool isDetected(int value)
 {
-	ClearTimer(T1);
-	while (true) {
-		if (time1[T1] > timeout) return;
-
-		int b = BOTTOM_DISTANCE;
-		if (detected(b)) {
-			writeDebugStreamLine("true - %i", b);
-			break;
-		} else {
-			writeDebugStreamLine("false - %i", b);
-			break;
-		}
-		waitSensor();
-	}
-}
-
-bool detectBothTurning(TurnDirection direction, int timeout, int power)
-{
-	ClearTimer(T1);
-	turn(direction, power);
-	while (true) {
-		if (time1[T1] > timeout) return false;
-		if (FULLY_DETECTED) return true;
-		waitSensor();
-	}
-	return false;
+	return value < 255;
 }
 
 void placeRingOn(PegLevel level)
 {
-	int s = LowSensor;
-
-	// Get in position to raise the accordion
-	setPower(10);
-	waitSensor(s, ACCORDION_DISTANCE);
-	setPower(0);
-	raiseAccordion();
-	wait1Msec(1000);
-	stopAccordion();
-
-	// Place the peg
-	setPower(10);
-	waitSensor(s, PLACE_RING_DISTANCE);
-
-	// Backoff from the peg to lower the accordion
-	setPower(-10);
-	waitSensor(s, ACCORDION_DISTANCE);
-	lowerAccordion();
-	wait1Msec(750);
-	setPower(0);
+	// TODO: Write code using the new sonic sensor on the accordion
+	// NOTE: We of cource cannot go to the third peg level
 }
 
 task sonarScan()
 {
-	int turnTime = 4000;
-
-	while (true) {
-		// Go forward until bottom bar detected
-		setPower(10);
-		findBottom(5000);
-
-		// Scan until we descover where both sensors match
-		if (detectBothTurning(LEFT, turnTime / 2, 20)) {
-			placeRingOn(DEFAULT_PLACEMENT);
-		} else if (detectBothTurning(RIGHT, turnTime, 20)) {
-			placeRingOn(DEFAULT_PLACEMENT);
-		} else {
-			// Reset position as nothing was found
-			turn(LEFT, 20);
-			wait1Msec(turnTime / 2);
-		}
-	}
+	// TODO: Write code for the new scanning method
 }
 
 void displaySonarDebug()
 {
-	nxtDisplayTextLine(0, "Sonar Top   : %i", SensorValue[HighSensor]);
-	nxtDisplayTextLine(1, "Sonar Bottom: %i", SensorValue[LowSensor]);
+	nxtDisplayTextLine(0, "Peg Sensor      : %i", SensorValue[PegSensor]);
+	nxtDisplayTextLine(1, "Accordion Sensor: %i", SensorValue[AccordionSensor]);
+	nxtDisplayTextLine(2, "Light Sensor    : %i", SensorValue[LightSensor]);
 }
 
 #endif
