@@ -1,10 +1,6 @@
 #ifndef JOYSTICK_H
 #define JOYSTICK_H
 
-const int DEADZONE = 5;
-
-float currentSpeed = NORMAL_SPEED_FACTOR;
-
 typedef enum {
 	DPAD_UP = 0,
 	DPAD_UP_RIGHT,
@@ -16,14 +12,16 @@ typedef enum {
 } JoystickDPad;
 
 typedef enum {
-	BUTTON_X = 0,
-	BUTTON_A = 1,
-	BUTTON_B = 2,
-	BUTTON_Y = 3,
-	BUTTON_LEFT_BUMPER = 4,
-	BUTTON_RIGHT_BUMPER = 5,
-	BUTTON_LEFT_TRIGGER = 6,
-	BUTTON_RIGHT_TRIGGER = 7
+	BUTTON_X  = 0,
+	BUTTON_A  = 1,
+	BUTTON_B  = 2,
+	BUTTON_Y  = 3,
+	BUTTON_LB = 4,
+	BUTTON_RB = 5,
+	BUTTON_LT = 6,
+	BUTTON_RT = 7,
+	BUTTON_BACK  = 8,
+	BUTTON_START = 9
 } JoystickButtons;
 
 typedef enum {
@@ -32,23 +30,84 @@ typedef enum {
 } MatchState;
 
 typedef enum {
-	ENABLED = 0,
-	DISABLED = 1
-} StateEnabled;
+	MODE_ENABLED = 0,
+	MODE_DISABLED = 1
+} ModeStatus;
+
+typedef struct {
+	int left;
+	int right;
+	DriveDirection direction;
+} DrivingState;
+
+typedef enum {
+	DRIVING_NORMAL,
+	DRIVING_IN_PLACE
+} DrivingMode;
+
+const int DEADZONE = 5;
+
+float currentSpeedFactor = NORMAL_SPEED_FACTOR;
 
 /**
  * Converts the joystick amount to a motor amount out of 100.
  *
  * @param power Joystick power to convert
  */
-int convertJoystickToMotor(const int power)
+int convertJoystickToMotor(int power)
 {
-	return ((power * 100) / 127);
+	if (power > 0) {
+		return floor((power / 127.0) * 100.0);
+	} else {
+		return floor((power / 128.0) * 100.0);
+	}
 }
 
 bool inDeadzone(const int x)
 {
 	return (x < DEADZONE && x > -DEADZONE);
+}
+
+void calculateDirectionNormal(int vertical, int horizontal, DrivingState *state)
+{
+	int lWheel = 0;
+	int rWheel = 0;
+	bool verticalInDeadzone = inDeadzone(vertical);
+	bool horizontalInDeadzone = inDeadzone(horizontal);
+
+	if (verticalInDeadzone && horizontalInDeadzone) {
+		vertical = 0;
+		horizontal = 0;
+	} else if (verticalInDeadzone && !horizontalInDeadzone) {
+		// Allow slight turning by moving just the horizontal amount
+		vertical = 20;
+	} else if (!verticalInDeadzone && horizontalInDeadzone) {
+		// Make sure not to turn while going only forward when the horizontal
+	    // is in the deadzone
+		horizontal = 0;
+	}
+
+	DriveDirection dir = getDirection(horizontal);
+	switch (dir) {
+		case LEFT:
+			// Left wheel will go slower then right
+			lWheel = floor(vertical * (1 - (-horizontal / 100.0)));
+			rWheel = vertical;
+			break;
+		case RIGHT:
+			// Right wheel will go slower then the left
+			lWheel = vertical;
+			rWheel = floor(vertical * (1 - (horizontal / 100.0)));
+			break;
+		case STRAIGHT:
+			lWheel = vertical;
+			rWheel = vertical;
+	}
+
+	// Limit the speed to the current speed limit
+	state->left  = floor(lWheel * currentSpeedFactor);
+	state->right = floor(rWheel * currentSpeedFactor);
+	state->direction = dir;
 }
 
 /* This uses the new method of driving where:
@@ -57,42 +116,21 @@ bool inDeadzone(const int x)
  */
 void setDirectionFromJoystick()
 {
-	int lWheel = 0;
-	int rWheel = 0;
+	DrivingState state;
 	int vertical = convertJoystickToMotor(joystick.joy1_y1);
 	int horizontal = convertJoystickToMotor(joystick.joy1_x2);
 
-	if (inDeadzone(vertical) && inDeadzone(horizontal)) {
-		setPower(0);
-		return;
-	} else if (inDeadzone(vertical) && !inDeadzone(horizontal)) {
-		// Allow slight turning by moving just the horizontal amount
-		vertical = 5;
-	} else if (!inDeadzone(vertical) && inDeadzone(horizontal)) {
-		// Make sure not to turn while going only forward when the horizontal
-	    // is in the deadzone
-		horizontal = 0;
-	}
+	calculateDirectionNormal(vertical, horizontal, &state);
+	setPower(state.left, state.right);
 
-	TurnDirection dir = getDirection(horizontal);
-	switch (dir) {
-		case LEFT:
-			// Left wheel will go slower then right
-			lWheel = vertical;
-			rWheel = vertical * (horizontal / 100);
-			break;
-		case RIGHT:
-			// Right wheel will go slower then the left
-			lWheel = vertical * (horizontal / 100);
-			rWheel = vertical;
-			break;
-	}
-
-	// Limit overall speed
-	lWheel = lWheel * currentSpeed;
-	rWheel = rWheel * currentSpeed;
-
-	setPower(lWheel, rWheel);
+#if GLOBAL_LOGGING
+    char* dirName = directionToString(state.direction);
+	nxtDisplayTextLine(0, "dir = %s", dirName);
+	nxtDisplayTextLine(1, "vert = %i", vertical);
+	nxtDisplayTextLine(2, "hori = %i", horizontal);
+	nxtDisplayTextLine(3, "lPower = %i", state.left);
+	nxtDisplayTextLine(4, "rPower = %i", state.right);
+#endif
 }
 
 void setAccordionFromJoystick()
@@ -120,30 +158,38 @@ void setAccordionFromJoystick()
  * NONE          | Normal speed factor | 75%
  */
 void setSpeedFromJoystick() {
-	if (joy1Btn(BUTTON_LEFT_TRIGGER)) {
-		currentSpeed = LOW_SPEED_FACTOR;
-	} else if (joy1Btn(BUTTON_RIGHT_TRIGGER)) {
-		currentSpeed = FULL_SPEED_FACTOR;
+	if (joy1Btn(BUTTON_LT)) {
+		currentSpeedFactor = LOW_SPEED_FACTOR;
+	} else if (joy1Btn(BUTTON_RT)) {
+		currentSpeedFactor = FULL_SPEED_FACTOR;
 	} else {
-		currentSpeed = NORMAL_SPEED_FACTOR;
+		currentSpeedFactor = NORMAL_SPEED_FACTOR;
 	}
+
+#if GLOBAL_LOGGING
+	writeDebugStreamLine("setSpeedFromJoystick: currentSpeedFactor = %f", currentSpeedFactor);
+#endif
 }
 
 void setTurnInPlaceFromJoystick()
 {
 	int lWheel = 0;
 	int rWheel = 0;
-	int horizontal = convertJoystickToMotor(joystick.joy1_x1);
+	int vertical = convertJoystickToMotor(joystick.joy1_y1);
 
-	TurnDirection dir = getDirection(horizontal);
+	DriveDirection dir = getDirection(vertical);
 	switch (dir) {
 		case LEFT:
-			lWheel = -horizontal;
-			rWheel = horizontal;
+			lWheel = -vertical;
+			rWheel = vertical;
 			break;
 		case RIGHT:
-			lWheel = horizontal;
-			rWheel = -horizontal;
+			lWheel = vertical;
+			rWheel = -vertical;
+			break;
+		case STRAIGHT:
+			lWheel = 0;
+			rWheel = 0;
 			break;
 	}
 
@@ -151,54 +197,71 @@ void setTurnInPlaceFromJoystick()
 }
 
 void teleop() {
-	if (DRIVING_ENABLED || MATCH_BUILD) {
-		setSpeedFromJoystick();
+#if GLOBAL_DRIVING
+	setSpeedFromJoystick();
 
-		if (joy1Btn(BUTTON_A)) {
-			setTurnInPlaceFromJoystick();
-		} else {
-			setDirectionFromJoystick();
-		}
-	}
+	//if (joy1Btn(BUTTON_A)) {
+	//	setTurnInPlaceFromJoystick();
+	//} else {
+		setDirectionFromJoystick();
+	//}
+#endif
 
-	if (ACCORDION_ENABLED || MATCH_BUILD) {
-		setAccordionFromJoystick();
-	}
+#if GLOBAL_ACCORDION
+	setAccordionFromJoystick();
+#endif
 
+#if GLOBAL_LOGGING
 	writeDebugStreamLine("Teleop called");
+#endif
 }
 
-void startMatch()
+void run()
 {
-	writeDebugStreamLine("Match has been called");
+#if GLOBAL_LOGGING
+	StartTask(logSensorValues);
+#endif
+
+#if (defined(NXT) || defined(TETRIX)) && (_TARGET == "Robot") && !defined(NaturalLanguage)
 	while(true) {
 		getJoystickSettings(joystick);
 
-		writeDebugStreamLine("UserMode: %i", joystick.UserMode);
-		writeDebugStreamLine("StopPgm:  %i", joystick.StopPgm);
-		if ((joystick.UserMode == AUTONOMOUS_MODE && TESTING_AUTONOMOUS) || MATCH_BUILD)
-			if (joystick.StopPgm == (bool)ENABLED) {
-				writeDebugStreamLine("Autonomous enabled");
-				if (!isAutonomousStarted) {
+		#if GLOBAL_LOGGING && 0
+			writeDebugStreamLine("UserMode: %i", joystick.UserMode);
+			writeDebugStreamLine("StopPgm : %i", joystick.StopPgm);
+		#endif
+
+		if ((joystick.UserMode == (bool)AUTONOMOUS_MODE) && GLOBAL_AUTONOMOUS) {
+			if (joystick.StopPgm == (bool)MODE_ENABLED) {
+				#if GLOBAL_LOGGING && 0
+					writeDebugStreamLine("Autonomous in enabled state");
+				#endif
+
+				if (!isAutonomousRunning) {
 					StartTask(autonomous);
-					isAutonomousStarted = true;
+					isAutonomousRunning = true;
 				}
 			}
-		} else if ((joystick.UserMode == TELEOP_MODE && TESTING_TELEOP) || MATCH_BUILD)
-			if (joystick.StopPgm == (bool)ENABLED) {
-				writeDebugStreamLine("Teleop enabled");
-				if (isAutonomousStarted) {
+		} else if ((joystick.UserMode == (bool)TELEOP_MODE) && GLOBAL_TELEOP) {
+			if (joystick.StopPgm == (bool)MODE_ENABLED) {
+				#if GLOBAL_LOGGING
+					writeDebugStreamLine("Teleop in enabled state");
+				#endif
+
+				if (isAutonomousRunning) {
 					StopTask(autonomous);
-					isAutonomousStarted = false;
+					isAutonomousRunning = false;
 				}
+
 				teleop();
 			}
 		}
-
-		displaySonarDebug();
-
-		// Wait for the next packet to come in
-		wait1Msec(50);
 	}
+#elif (defined(NXT) || defined(TETRIX)) && (_TARGET == "Emulator")
+	#error "run() was called but the joystick code does not compile properly on the emulator. Run on the robot instead."
+#else
+	#error "This platform does not support the joystick code. How you managed to get this error, I don't know."
+#endif
 }
+
 #endif

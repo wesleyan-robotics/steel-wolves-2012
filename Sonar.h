@@ -1,31 +1,40 @@
 #ifndef SONAR_SCANNER_H
 #define SONAR_SCANNER_H
 
-#include "Accordion.h"
-
 #define PEG_VALUE SensorValue[PegSensor]
-#define ACCORDIAN_VALUE SensorValue[AccordionSensor]
+#define ACCORDION_VALUE SensorValue[AccordionSensor]
 #define LIGHT_VALUE SensorValue[LightSensor]
 #define IS_ON_BOARD (LIGHT_VALUE > HIGH_THRESHOLD && LIGHT_VALUE < LOW_THRESHOLD)
 #define IS_LIGHT_HIGH (LIGHT_VALUE > HIGH_THRESHOLD)
 #define IS_LIGHT_LOW (LIGHT_VALUE < LOW_THRESHOLD)
 
+/* Each value of PegLevel is the distance the accordion sensor
+ * has to reach to get there */
 typedef enum {
-	COLLAPSED = 2,
-	BOTTOM = 2,
-	MIDDLE = 6,
-	TOP = -1 // NOTE: We can't get the the third peg
+	COLLAPSED   = 8,
+	BOTTOM      = 20,
+	MIDDLE      = 20,
+	TOP         = 8 /* NOTE: We can't get the the third peg, but for safety reasons
+	                         we'll just make it the bottom peg */
 } PegLevel;
 
 const PegLevel DEFAULT_PEG_PLACEMENT = BOTTOM;
 
-// NOTE: The sonic sensor's distance is measured in cenimeters
-const int HIGH_THRESHOLD = 80;
-const int LOW_THRESHOLD = 20;
-const int ACCORDION_DISTANCE = 32;
-const int PLACE_RING_DISTANCE = 10;
+const int BOARD_SEACRH_SPEED   = 20;
+const int ALIGNMENT_SPEED      = 18;
+const int RING_PLACEMENT_SPEED = 10;
 
-bool isAutonomousStarted = false;
+// Values relavant to the light sensor
+const int HIGH_THRESHOLD = 25;
+const int LOW_THRESHOLD = 20;
+
+// Distances in centimeters for the sonic sensor
+// TODO: We will need to get the actual values!
+const int ACCORDION_DISTANCE =  40;
+const int PLACE_RING_DISTANCE = 30;
+
+bool isAutonomousRunning = false;
+bool isLoggingSensorValues = false;
 
 /**
  * The ID of the bottom sonic sensor.
@@ -75,74 +84,138 @@ void waitUntilSensorLessThan(int sensor, int value)
 
 void setAccordionTo(PegLevel level)
 {
-	// Check that we are not higher first
-	if (ACCORDIAN_VALUE > (int)level) {
+	if (ACCORDION_VALUE == (int)level) {
+		return;
+	} else if (ACCORDION_VALUE > (int)level) {
+		// Lower it if we are higher in the first place
 		lowerAccordion();
-		waitUntilSensorLessThan(AccordionSensor, BOTTOM);
+		waitUntilSensorLessThan(AccordionSensor, level);
 		stopAccordion();
-	} else if (ACCORDIAN_VALUE < (int)level) {
+	} else if (ACCORDION_VALUE < (int)level) {
+		// Now raise it to the correct level
 		raiseAccordion();
-		waitUntilSensorGreaterThan(AccordionSensor, BOTTOM);
+		waitUntilSensorGreaterThan(AccordionSensor, level);
 		stopAccordion();
 	}
 }
 
-void waitSensor()
+void driveToBoard()
 {
-	// Slow down getting values from sensor
-	wait1Msec(100);
+	int counter = 0;
+
+	// NOTE: We assume we are in the right direction!
+	while(!IS_LIGHT_LOW) {
+		setPower(BOARD_SEACRH_SPEED);
+		counter++;
+
+		#if GLOBAL_LOGGING
+			writeDebugStreamLine("[%i] Status: Searching for black board", counter);
+		#endif
+	}
+	setPower(0);
 }
 
-bool isDetected(int value)
+void traceLine()
 {
-	return value < 255;
-}
+	int counter = 0;
 
-void alignToLiftingPosition()
-{
 	// Keep moving on the line until we reach the accordion distance
 	while (PEG_VALUE > ACCORDION_DISTANCE) {
 		if (IS_LIGHT_HIGH) {
-			turn(LEFT, AUTONOMOUS_SPEED, 0.20);
+			turn(LEFT, ALIGNMENT_SPEED, 0);
 			waitUntilSensorLessThan(LightSensor, LOW_THRESHOLD);
+			counter++;
+
+			#if GLOBAL_LOGGING
+				writeDebugStreamLine("[%i] Status: Moving to dark", counter);
+			#endif
 		} else if (IS_LIGHT_LOW) {
-			turn(RIGHT, AUTONOMOUS_SPEED, 0.20);
+			turn(RIGHT, ALIGNMENT_SPEED, 0);
 			waitUntilSensorGreaterThan(LightSensor, HIGH_THRESHOLD);
+			counter++;
+
+			#if GLOBAL_LOGGING
+				writeDebugStreamLine("[%i] Status: Moving to bright", counter);
+			#endif
 		}
 	}
 
+	#if GLOBAL_LOGGING
+		writeDebugStreamLine("[DONE] Status: Reached accordion distance");
+	#endif
+	setPower(0);
+}
+
+void placeRing()
+{
+	#if GLOBAL_LOGGING
+		writeDebugStreamLine("[START] Status: Starting to place the ring");
+		writeDebugStreamLine("Status: Setting accordion to the default placement");
+	#endif
+
 	// Raise up the accordion
 	setAccordionTo(DEFAULT_PEG_PLACEMENT);
+
+	#if GLOBAL_LOGGING
+		writeDebugStreamLine("Status: Accordion set to default placement");
+		writeDebugStreamLine("Status: Driving into the placement distance");
+	#endif
 
 	// Drive into the peg to place it
 	setPower(RING_PLACEMENT_SPEED);
 	waitUntilSensorLessThan(PegSensor, PLACE_RING_DISTANCE);
 	setPower(0);
 
+	#if GLOBAL_LOGGING
+		writeDebugStreamLine("Status: Ring is (hopefully) now on the peg.");
+		writeDebugStreamLine("Status: Lowering accordion to drop the ring.");
+	#endif
+
+	// Drop the ring
+	setAccordionTo(BOTTOM - 5);
+
+	#if GLOBAL_LOGGING
+		writeDebugStreamLine("Status: Accordion has been lowed to drop the ring");
+		writeDebugStreamLine("Status: Driving back out to collapse the accordion");
+	#endif
+
 	// Drive back out
 	setPower(-RING_PLACEMENT_SPEED);
 	waitUntilSensorGreaterThan(PegSensor, ACCORDION_DISTANCE);
 	setPower(0);
 
+	#if GLOBAL_LOGGING
+		writeDebugStreamLine("Status: Finished driving back out");
+		writeDebugStreamLine("Status: Collapsing accordion");
+	#endif
+
 	// Lower the accordion back down
 	setAccordionTo(COLLAPSED);
+
+	#if GLOBAL_LOGGING
+		writeDebugStreamLine("Status: Finished collapsing accordion");
+		writeDebugStreamLine("[FINISHED AUTONOMOUS!]");
+	#endif
+}
+
+task logSensorValues()
+{
+	if (!isLoggingSensorValues) {
+		isLoggingSensorValues = true;
+		while (true) {
+			nxtDisplayTextLine(5, "PegSen    = %i", SensorValue[PegSensor]);
+			nxtDisplayTextLine(6, "AccordSen = %i", SensorValue[AccordionSensor]);
+			nxtDisplayTextLine(7, "LightSen  = %i", SensorValue[LightSensor]);
+		}
+	}
 }
 
 task autonomous()
 {
-	// NOTE: We assume we are in the right direction!
-	while(!IS_ON_BOARD) {
-		setPower(AUTONOMOUS_SPEED);
-	}
-
-	alignToLiftingPosition();
-}
-
-void displaySonarDebug()
-{
-	nxtDisplayTextLine(0, "Peg Sensor      : %i", SensorValue[PegSensor]);
-	nxtDisplayTextLine(1, "Accordion Sensor: %i", SensorValue[AccordionSensor]);
-	nxtDisplayTextLine(2, "Light Sensor    : %i", SensorValue[LightSensor]);
+	driveToBoard();
+	traceLine();
+	placeRing();
+	setPower(0);
 }
 
 #endif

@@ -1,17 +1,20 @@
 #ifndef MOTOR_H
 #define MOTOR_H
 
-const float NORMAL_SPEED_FACTOR = 0.75;
-const float FULL_SPEED_FACTOR = 1.0;
-const float LOW_SPEED_FACTOR = 0.5;
-const float AUTONOMOUS_SPEED_FACTOR = LOW_SPEED_FACTOR;
-const float RING_PLACEMENT_SPEED_FACTOR = 0.2;
+typedef enum {
+	LEFT,
+	RIGHT,
+	STRAIGHT
+} DriveDirection;
 
-const int FULL_SPEED = 100;
+const float NORMAL_SPEED_FACTOR = 0.75;
+const float FULL_SPEED_FACTOR   = 1.00;
+const float LOW_SPEED_FACTOR    = 0.50;
+
+const int FULL_SPEED   = 100 * FULL_SPEED_FACTOR;
 const int NORMAL_SPEED = 100 * NORMAL_SPEED_FACTOR;
-const int LOW_SPEED = 100 * LOW_SPEED_FACTOR;
-const int AUTONOMOUS_SPEED = 100 * AUTONOMOUS_SPEED_FACTOR;
-const int RING_PLACEMENT_SPEED = 100 * RING_PLACEMENT_SPEED_FACTOR;
+const int LOW_SPEED    = 100 * LOW_SPEED_FACTOR;
+
 
 /**
  * The diameter of the wheel in inches
@@ -38,11 +41,6 @@ int LeftMotor = -1;
  */
 int RightMotor = -1;
 
-typedef enum {
-	LEFT,
-	RIGHT
-} TurnDirection;
-
 /**
  * Gets the direction from a horizontal value where
  * a positive value is going forward and
@@ -50,12 +48,28 @@ typedef enum {
  *
  * @param value The horizontal value representing the direction
  */
-TurnDirection getDirection(int horizontal)
+DriveDirection getDirection(int horizontal)
 {
 	if (horizontal < 0) {
 		return LEFT;
-	} else {
+	} else if (horizontal > 0) {
 		return RIGHT;
+	} else {
+		return STRAIGHT;
+	}
+}
+
+char* directionToString(DriveDirection dir)
+{
+	switch (dir) {
+	case LEFT:
+		return "left";
+	case RIGHT:
+		return "right";
+	case STRAIGHT:
+		return "straight";
+	default:
+		return "invalid";
 	}
 }
 
@@ -194,7 +208,7 @@ void moveInInches(int power, float inches)
  * @param deg The amount in degrees to turn.
  * @param power The power to turn with
  */
-void pointTurn(TurnDirection dir, int deg, int power)
+void pointTurn(DriveDirection dir, int deg, int power)
 {
 	int moveMotor;
 	int stopMotor;
@@ -215,7 +229,7 @@ void pointTurn(TurnDirection dir, int deg, int power)
 	reachTargetAtPower(moveMotor, power);
 }
 
-void turn(TurnDirection dir, int power)
+void turn(DriveDirection dir, int power)
 {
 	int moveMotor;
 	int stopMotor;
@@ -235,7 +249,7 @@ void turn(TurnDirection dir, int power)
 	motor[moveMotor] = power;
 }
 
-void turn(TurnDirection dir, int power, float percentage)
+void turn(DriveDirection dir, int power, float percentage)
 {
 	int moveMotor;
 	int stopMotor;
@@ -247,7 +261,7 @@ void turn(TurnDirection dir, int power, float percentage)
 	}
 	else
 	{
-		stopMotor = RightMotor;
+		stopMotor = LeftMotor;
 		moveMotor = RightMotor;
     }
 
@@ -261,7 +275,7 @@ void turn(TurnDirection dir, int power, float percentage)
  * @param ms The amount in milliseconds to turn
  * @param power The power to turn with
  */
-void pointTurnTiming(TurnDirection dir, int ms, int power)
+void pointTurnTiming(DriveDirection dir, int ms, int power)
 {
 	turn(dir, power);
 	wait1Msec(ms);
