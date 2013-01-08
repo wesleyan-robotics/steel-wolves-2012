@@ -21,9 +21,9 @@ typedef enum {
 
 const PegLevel DEFAULT_PEG_PLACEMENT = BOTTOM;
 
-const int BOARD_SEACRH_SPEED   = 20;
-const int ALIGNMENT_SPEED      = 20;
-const int RING_PLACEMENT_SPEED = 10;
+const int BOARD_SEACRH_SPEED   = 35;
+const int ALIGNMENT_SPEED      = 35;
+const int RING_PLACEMENT_SPEED = 20;
 
 // Values relavant to the light sensor
 const int HIGH_THRESHOLD = 25;
@@ -105,7 +105,7 @@ void driveToBoard()
 	int counter = 0;
 
 	// NOTE: We assume we are in the right direction!
-	while(!IS_LIGHT_LOW) {
+	while(!IS_LIGHT_LOW || PEG_VALUE > ACCORDION_DISTANCE) {
 		setPower(BOARD_SEACRH_SPEED);
 		counter++;
 
