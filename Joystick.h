@@ -40,11 +40,6 @@ typedef struct {
 	DriveDirection direction;
 } DrivingState;
 
-typedef enum {
-	DRIVING_NORMAL,
-	DRIVING_IN_PLACE
-} DrivingMode;
-
 const int DEADZONE = 5;
 
 float currentSpeedFactor = NORMAL_SPEED_FACTOR;
@@ -157,7 +152,8 @@ void setAccordionFromJoystick()
  * RIGHT TRIGGER | Full speed factor   | 100%
  * NONE          | Normal speed factor | 75%
  */
-void setSpeedFromJoystick() {
+void setSpeedFromJoystick()
+{
 	if (joy1Btn(BUTTON_LT)) {
 		currentSpeedFactor = LOW_SPEED_FACTOR;
 	} else if (joy1Btn(BUTTON_RT)) {
@@ -196,7 +192,8 @@ void setTurnInPlaceFromJoystick()
 	setPower(lWheel, rWheel);
 }
 
-void teleop() {
+void teleop()
+{
 #if GLOBAL_DRIVING
 	setSpeedFromJoystick();
 

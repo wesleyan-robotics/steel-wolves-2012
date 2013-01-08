@@ -11,11 +11,6 @@ const float NORMAL_SPEED_FACTOR = 0.75;
 const float FULL_SPEED_FACTOR   = 1.00;
 const float LOW_SPEED_FACTOR    = 0.50;
 
-const int FULL_SPEED   = 100 * FULL_SPEED_FACTOR;
-const int NORMAL_SPEED = 100 * NORMAL_SPEED_FACTOR;
-const int LOW_SPEED    = 100 * LOW_SPEED_FACTOR;
-
-
 /**
  * The diameter of the wheel in inches
  */

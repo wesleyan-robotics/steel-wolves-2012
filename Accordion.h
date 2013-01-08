@@ -1,8 +1,10 @@
 #ifndef ACCORDION_H
 #define ACCORDION_H
 
-const int ACCORDION_SPEED_UP   = 60;
-const int ACCORDION_SPEED_DOWN = 30;
+const int ACCORDION_SPEED_UP   =  60;
+const int ACCORDION_SPEED_DOWN = -25;
+const int ACCORDION_LOW_SPEED_DOWN = -18; /* TODO: These Values need to be calibrated with the battry charged */
+const int ACCORDION_LOW_SPEED_UP  =   45; /* TODO: Including this one for raising and lowering to the peg programmically */
 const float ACCORDION_RATIO = 3.3921; /* Ratio between rotations from the small gear to the bigger gear */
 
 int BottomAccordion = -1;
@@ -14,22 +16,25 @@ void initAccordion(int bottom, int top)
 	TopAccordion = top;
 }
 
+void setAccordion(int speed)
+{
+	motor[AccordionTop] = speed;
+	motor[AccordionBottom] = speed / ACCORDION_RATIO;
+}
+
 void raiseAccordion()
 {
-	motor[AccordionTop] = -ACCORDION_SPEED_UP;
-	motor[AccordionBottom] = -ACCORDION_SPEED_UP / ACCORDION_RATIO;
+	setAccordion(ACCORDION_SPEED_UP);
 }
 
 void lowerAccordion()
 {
-	motor[AccordionTop] = ACCORDION_SPEED_DOWN;
-	motor[AccordionBottom] = ACCORDION_SPEED_DOWN / ACCORDION_RATIO;
+	setAccordion(ACCORDION_SPEED_DOWN);
 }
 
 void stopAccordion()
 {
-	motor[AccordionTop] = 0;
-	motor[AccordionBottom] = 0;
+	setAccordion(0);
 }
 
 #endif

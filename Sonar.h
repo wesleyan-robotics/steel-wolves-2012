@@ -12,16 +12,17 @@
  * has to reach to get there */
 typedef enum {
 	COLLAPSED   = 8,
-	BOTTOM      = 20,
-	MIDDLE      = 20,
-	TOP         = 8 /* NOTE: We can't get the the third peg, but for safety reasons
-	                         we'll just make it the bottom peg */
+	BOTTOM      = 14,
+	/* MIDDLE   = 14, */ /* TODO: At the moment, since the accordion is leaning over too
+	                              much, we cannot get the actual height for the middle peg */
+	/* TOP      = 8  */  /* NOTE: We can't get the the third peg, but for safety reasons
+	                              we'll just make it the bottom peg */
 } PegLevel;
 
 const PegLevel DEFAULT_PEG_PLACEMENT = BOTTOM;
 
 const int BOARD_SEACRH_SPEED   = 20;
-const int ALIGNMENT_SPEED      = 18;
+const int ALIGNMENT_SPEED      = 20;
 const int RING_PLACEMENT_SPEED = 10;
 
 // Values relavant to the light sensor
@@ -31,7 +32,7 @@ const int LOW_THRESHOLD = 20;
 // Distances in centimeters for the sonic sensor
 // TODO: We will need to get the actual values!
 const int ACCORDION_DISTANCE =  40;
-const int PLACE_RING_DISTANCE = 30;
+const int PLACE_RING_DISTANCE = 26;
 
 bool isAutonomousRunning = false;
 bool isLoggingSensorValues = false;
@@ -82,18 +83,18 @@ void waitUntilSensorLessThan(int sensor, int value)
 	}
 }
 
-void setAccordionTo(PegLevel level)
+void setAccordionToPeg(PegLevel level)
 {
 	if (ACCORDION_VALUE == (int)level) {
 		return;
 	} else if (ACCORDION_VALUE > (int)level) {
 		// Lower it if we are higher in the first place
-		lowerAccordion();
+		setAccordion(ACCORDION_LOW_SPEED_DOWN);
 		waitUntilSensorLessThan(AccordionSensor, level);
 		stopAccordion();
 	} else if (ACCORDION_VALUE < (int)level) {
 		// Now raise it to the correct level
-		raiseAccordion();
+		setAccordion(ACCORDION_LOW_SPEED_UP);
 		waitUntilSensorGreaterThan(AccordionSensor, level);
 		stopAccordion();
 	}
@@ -154,7 +155,7 @@ void placeRing()
 	#endif
 
 	// Raise up the accordion
-	setAccordionTo(DEFAULT_PEG_PLACEMENT);
+	setAccordionToPeg(DEFAULT_PEG_PLACEMENT);
 
 	#if GLOBAL_LOGGING
 		writeDebugStreamLine("Status: Accordion set to default placement");
@@ -172,7 +173,7 @@ void placeRing()
 	#endif
 
 	// Drop the ring
-	setAccordionTo(BOTTOM - 5);
+	setAccordionToPeg(BOTTOM - 5);
 
 	#if GLOBAL_LOGGING
 		writeDebugStreamLine("Status: Accordion has been lowed to drop the ring");
@@ -190,7 +191,7 @@ void placeRing()
 	#endif
 
 	// Lower the accordion back down
-	setAccordionTo(COLLAPSED);
+	setAccordionToPeg(COLLAPSED);
 
 	#if GLOBAL_LOGGING
 		writeDebugStreamLine("Status: Finished collapsing accordion");
