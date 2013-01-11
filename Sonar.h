@@ -4,34 +4,36 @@
 #define PEG_VALUE SensorValue[PegSensor]
 #define ACCORDION_VALUE SensorValue[AccordionSensor]
 #define LIGHT_VALUE SensorValue[LightSensor]
-#define IS_ON_BOARD (LIGHT_VALUE > HIGH_THRESHOLD && LIGHT_VALUE < LOW_THRESHOLD)
-#define IS_LIGHT_HIGH (LIGHT_VALUE > HIGH_THRESHOLD)
-#define IS_LIGHT_LOW (LIGHT_VALUE < LOW_THRESHOLD)
+#define IS_LIGHT_WHITE (LIGHT_VALUE > WHITE_THRESHOLD_BOTTOM && LIGHT_VALUE < WHITE_THRESHOLD_TOP)
+#define IS_LIGHT_BLACK (LIGHT_VALUE > BLACK_THRESHOLD_BOTTOM && LIGHT_VALUE < BLACK_THRESHOLD_TOP)
 
 /* Each value of PegLevel is the distance the accordion sensor
  * has to reach to get there */
 typedef enum {
-	COLLAPSED   = 8,
-	BOTTOM      = 14,
-	/* MIDDLE   = 14, */ /* TODO: At the moment, since the accordion is leaning over too
+	COLLAPSED = 8,
+	BOTTOM    = 14,
+	MIDDLE    = 14,    /* TODO: At the moment, since the accordion is leaning over too
 	                              much, we cannot get the actual height for the middle peg */
-	/* TOP      = 8  */  /* NOTE: We can't get the the third peg, but for safety reasons
+	/* TOP    = 8  */  /* NOTE: We can't get the the third peg, but for safety reasons
 	                              we'll just make it the bottom peg */
 } PegLevel;
 
 const PegLevel DEFAULT_PEG_PLACEMENT = BOTTOM;
 
-const int BOARD_SEACRH_SPEED   = 35;
-const int ALIGNMENT_SPEED      = 35;
-const int RING_PLACEMENT_SPEED = 20;
+const int BOARD_SEACRH_SPEED   = 20;
+const int ALIGNMENT_SPEED      = 20;
+const int RING_PLACEMENT_SPEED = 15;
 
 // Values relavant to the light sensor
-const int HIGH_THRESHOLD = 25;
-const int LOW_THRESHOLD = 20;
+const int WHITE_THRESHOLD_TOP    = 32;
+const int WHITE_THRESHOLD_BOTTOM = 28;
+
+const int BLACK_THRESHOLD_TOP    = 22;
+const int BLACK_THRESHOLD_BOTTOM = 18;
 
 // Distances in centimeters for the sonic sensor
 // TODO: We will need to get the actual values!
-const int ACCORDION_DISTANCE =  40;
+const int ACCORDION_DISTANCE =  30;
 const int PLACE_RING_DISTANCE = 26;
 
 bool isAutonomousRunning = false;
@@ -105,12 +107,12 @@ void driveToBoard()
 	int counter = 0;
 
 	// NOTE: We assume we are in the right direction!
-	while(!IS_LIGHT_LOW || PEG_VALUE > ACCORDION_DISTANCE) {
+	while(!IS_LIGHT_BLACK || PEG_VALUE > ACCORDION_DISTANCE) {
 		setPower(BOARD_SEACRH_SPEED);
 		counter++;
 
 		#if GLOBAL_LOGGING
-			writeDebugStreamLine("[%i] Status: Searching for black board", counter);
+			writeDebugStreamLine("[%i] -> %i | Status: Searching for black board", counter, LIGHT_VALUE);
 		#endif
 	}
 	setPower(0);
@@ -122,17 +124,17 @@ void traceLine()
 
 	// Keep moving on the line until we reach the accordion distance
 	while (PEG_VALUE > ACCORDION_DISTANCE) {
-		if (IS_LIGHT_HIGH) {
+		if (IS_LIGHT_WHITE) {
 			turn(LEFT, ALIGNMENT_SPEED, 0);
-			waitUntilSensorLessThan(LightSensor, LOW_THRESHOLD);
+			waitUntilSensorLessThan(LightSensor, BLACK_THRESHOLD_BOTTOM);
 			counter++;
 
 			#if GLOBAL_LOGGING
 				writeDebugStreamLine("[%i] Status: Moving to dark", counter);
 			#endif
-		} else if (IS_LIGHT_LOW) {
+		} else if (IS_LIGHT_BLACK) {
 			turn(RIGHT, ALIGNMENT_SPEED, 0);
-			waitUntilSensorGreaterThan(LightSensor, HIGH_THRESHOLD);
+			waitUntilSensorGreaterThan(LightSensor, WHITE_THRESHOLD_BOTTOM);
 			counter++;
 
 			#if GLOBAL_LOGGING
@@ -215,7 +217,7 @@ task autonomous()
 {
 	driveToBoard();
 	traceLine();
-	placeRing();
+	//placeRing();
 	setPower(0);
 }
 

@@ -75,7 +75,7 @@ void calculateDirectionNormal(int vertical, int horizontal, DrivingState *state)
 		horizontal = 0;
 	} else if (verticalInDeadzone && !horizontalInDeadzone) {
 		// Allow slight turning by moving just the horizontal amount
-		vertical = 20;
+		vertical = LOW_SPEED_FACTOR * 100;
 	} else if (!verticalInDeadzone && horizontalInDeadzone) {
 		// Make sure not to turn while going only forward when the horizontal
 	    // is in the deadzone
@@ -86,13 +86,13 @@ void calculateDirectionNormal(int vertical, int horizontal, DrivingState *state)
 	switch (dir) {
 		case LEFT:
 			// Left wheel will go slower then right
-			lWheel = floor(vertical * (1 - (-horizontal / 100.0)));
+			lWheel = abs(floor(vertical * (1 - (-horizontal / 100.0))));
 			rWheel = vertical;
 			break;
 		case RIGHT:
 			// Right wheel will go slower then the left
 			lWheel = vertical;
-			rWheel = floor(vertical * (1 - (horizontal / 100.0)));
+			rWheel = abs(floor(vertical * (1 - (horizontal / 100.0))));
 			break;
 		case STRAIGHT:
 			lWheel = vertical;
