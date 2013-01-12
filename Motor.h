@@ -7,7 +7,7 @@ typedef enum {
 	STRAIGHT
 } DriveDirection;
 
-const float NORMAL_SPEED_FACTOR = 0.75;
+const float NORMAL_SPEED_FACTOR = 0.70;
 const float FULL_SPEED_FACTOR   = 1.00;
 const float LOW_SPEED_FACTOR    = 0.50;
 

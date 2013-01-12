@@ -13,7 +13,7 @@
 
    **ALWAYS** do this for an actually match or to test an actual one!!!
 */
-#define     MATCH_OVERRIDE  0
+#define     MATCH_OVERRIDE  1
 
 #define    LOGGING_ENABLED  1
 #define AUTONOMOUS_ENABLED  1

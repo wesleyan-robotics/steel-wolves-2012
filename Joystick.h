@@ -17,9 +17,9 @@ typedef enum {
 	BUTTON_B  = 2,
 	BUTTON_Y  = 3,
 	BUTTON_LB = 4,
-	BUTTON_RB = 5,
+	BUTTON_RB = 7,
 	BUTTON_LT = 6,
-	BUTTON_RT = 7,
+	BUTTON_RT = 5,
 	BUTTON_BACK  = 8,
 	BUTTON_START = 9
 } JoystickButtons;
@@ -65,44 +65,23 @@ bool inDeadzone(const int x)
 
 void calculateDirectionNormal(int vertical, int horizontal, DrivingState *state)
 {
-	int lWheel = 0;
-	int rWheel = 0;
-	bool verticalInDeadzone = inDeadzone(vertical);
-	bool horizontalInDeadzone = inDeadzone(horizontal);
+	int lWheel;
+	int rWheel;
 
-	if (verticalInDeadzone && horizontalInDeadzone) {
-		vertical = 0;
-		horizontal = 0;
-	} else if (verticalInDeadzone && !horizontalInDeadzone) {
-		// Allow slight turning by moving just the horizontal amount
-		vertical = LOW_SPEED_FACTOR * 100;
-	} else if (!verticalInDeadzone && horizontalInDeadzone) {
-		// Make sure not to turn while going only forward when the horizontal
-	    // is in the deadzone
-		horizontal = 0;
+	if (inDeadzone(vertical) && inDeadzone(horizontal)) {
+		lWheel = 0;
+		rWheel = 0;
+	} else if (!inDeadzone(horizontal)) {
+		vertical = 5;
 	}
 
-	DriveDirection dir = getDirection(horizontal);
-	switch (dir) {
-		case LEFT:
-			// Left wheel will go slower then right
-			lWheel = abs(floor(vertical * (1 - (-horizontal / 100.0))));
-			rWheel = vertical;
-			break;
-		case RIGHT:
-			// Right wheel will go slower then the left
-			lWheel = vertical;
-			rWheel = abs(floor(vertical * (1 - (horizontal / 100.0))));
-			break;
-		case STRAIGHT:
-			lWheel = vertical;
-			rWheel = vertical;
-	}
+	lWheel = (vertical + horizontal) * currentSpeedFactor;
+	rWheel = (vertical - horizontal) * currentSpeedFactor;
 
 	// Limit the speed to the current speed limit
-	state->left  = floor(lWheel * currentSpeedFactor);
-	state->right = floor(rWheel * currentSpeedFactor);
-	state->direction = dir;
+	state->left  = floor(lWheel);
+	state->right = floor(rWheel);
+	//state->direction = dir;
 }
 
 /* This uses the new method of driving where:
@@ -253,6 +232,8 @@ void run()
 				teleop();
 			}
 		}
+
+		wait1Msec(100);
 	}
 #elif (defined(NXT) || defined(TETRIX)) && (_TARGET == "Emulator")
 	#error "run() was called but the joystick code does not compile properly on the emulator. Run on the robot instead."
