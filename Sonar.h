@@ -154,7 +154,6 @@ void traceLine()
 		}
 	}
 
-
 	#if GLOBAL_LOGGING
 		writeDebugStreamLine("[DONE] Status: Reached accordion distance");
 	#endif

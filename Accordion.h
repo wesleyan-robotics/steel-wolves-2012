@@ -1,8 +1,8 @@
 #ifndef ACCORDION_H
 #define ACCORDION_H
 
-const int ACCORDION_SPEED_UP   =  60;
-const int ACCORDION_SPEED_DOWN = -25;
+const int ACCORDION_SPEED_UP   = -60;
+const int ACCORDION_SPEED_DOWN =  30;
 const int ACCORDION_LOW_SPEED_DOWN = -18; /* TODO: These Values need to be calibrated with the battry charged */
 const int ACCORDION_LOW_SPEED_UP  =   45; /* TODO: Including this one for raising and lowering to the peg programmically */
 const float ACCORDION_RATIO = 3.3921; /* Ratio between rotations from the small gear to the bigger gear */

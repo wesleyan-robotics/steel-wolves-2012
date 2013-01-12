@@ -13,10 +13,10 @@
 
    **ALWAYS** do this for an actually match or to test an actual one!!!
 */
-#define     MATCH_OVERRIDE  1
+#define     MATCH_OVERRIDE  0
 
-#define    LOGGING_ENABLED  1
-#define AUTONOMOUS_ENABLED  1
+#define    LOGGING_ENABLED  0
+#define AUTONOMOUS_ENABLED  0
 #define     TELEOP_ENABLED  1
 
 #define    DRIVING_ENABLED  1
@@ -30,7 +30,7 @@
 
 /* NOTE: DO NOT MOVE THESE INCLUDES AROUND!!!
          RobotC's retarded compilation will not work if the files
-         are moved around at. Nor should you go and try including
+         are moved around at all. Nor should you go and try including
          each file in each other header file. I already tried that
          and will only give you a mess of compiler errors.
 

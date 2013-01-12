@@ -16,10 +16,10 @@ typedef enum {
 	BUTTON_A  = 1,
 	BUTTON_B  = 2,
 	BUTTON_Y  = 3,
-	BUTTON_LB = 4,
-	BUTTON_RB = 7,
-	BUTTON_LT = 6,
-	BUTTON_RT = 5,
+	BUTTON_LT = 4,
+	BUTTON_RB = 5,
+	BUTTON_LB = 6,
+	BUTTON_RT = 7,
 	BUTTON_BACK  = 8,
 	BUTTON_START = 9
 } JoystickButtons;
@@ -41,6 +41,7 @@ typedef struct {
 } DrivingState;
 
 const int DEADZONE = 5;
+const int JOYSTICK_FETCH_DELAY_MS = 150;
 
 float currentSpeedFactor = NORMAL_SPEED_FACTOR;
 
@@ -202,14 +203,14 @@ void run()
 	while(true) {
 		getJoystickSettings(joystick);
 
-		#if GLOBAL_LOGGING && 0
+		#if GLOBAL_LOGGING
 			writeDebugStreamLine("UserMode: %i", joystick.UserMode);
 			writeDebugStreamLine("StopPgm : %i", joystick.StopPgm);
 		#endif
 
 		if ((joystick.UserMode == (bool)AUTONOMOUS_MODE) && GLOBAL_AUTONOMOUS) {
 			if (joystick.StopPgm == (bool)MODE_ENABLED) {
-				#if GLOBAL_LOGGING && 0
+				#if GLOBAL_LOGGING
 					writeDebugStreamLine("Autonomous in enabled state");
 				#endif
 
@@ -233,7 +234,7 @@ void run()
 			}
 		}
 
-		wait1Msec(100);
+		wait1Msec(JOYSTICK_FETCH_DELAY_MS);
 	}
 #elif (defined(NXT) || defined(TETRIX)) && (_TARGET == "Emulator")
 	#error "run() was called but the joystick code does not compile properly on the emulator. Run on the robot instead."
