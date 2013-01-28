@@ -107,7 +107,7 @@ void driveToBoard()
 	int counter = 0;
 
 	// NOTE: We assume we are in the right direction!
-	while(!IS_LIGHT_BLACK || PEG_VALUE > ACCORDION_DISTANCE) {
+	while((!IS_LIGHT_BLACK && !IS_LIGHT_WHITE) || (PEG_VALUE > ACCORDION_DISTANCE)) {
 		setPower(BOARD_SEACRH_SPEED);
 		counter++;
 
