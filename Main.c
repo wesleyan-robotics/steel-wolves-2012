@@ -15,7 +15,7 @@
 */
 #define     MATCH_OVERRIDE  0
 
-#define    LOGGING_ENABLED  0
+#define    LOGGING_ENABLED  1
 #define AUTONOMOUS_ENABLED  0
 #define     TELEOP_ENABLED  1
 

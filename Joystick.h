@@ -16,10 +16,10 @@ typedef enum {
 	BUTTON_A  = 1,
 	BUTTON_B  = 2,
 	BUTTON_Y  = 3,
-	BUTTON_LT = 4,
+	BUTTON_LT = 7,
 	BUTTON_RB = 5,
 	BUTTON_LB = 6,
-	BUTTON_RT = 7,
+	BUTTON_RT = 4,
 	BUTTON_BACK  = 8,
 	BUTTON_START = 9
 } JoystickButtons;
