@@ -85,6 +85,19 @@ void calculateDirectionNormal(int vertical, int horizontal, DrivingState *state)
 	//state->direction = dir;
 }
 
+bool isJoystickInDeadzone()
+{
+	DrivingState state;
+	int vertical = convertJoystickToMotor(joystick.joy1_y1);
+	int horizontal = convertJoystickToMotor(joystick.joy1_x2);
+
+	if (inDeadzone(vertical) && inDeadzone(horizontal)) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 /* This uses the new method of driving where:
  * LEFT Joystick  - Moves forward and backward
  * RIGHT Joystick - Moves left and right
@@ -203,35 +216,14 @@ void run()
 	while(true) {
 		getJoystickSettings(joystick);
 
-		#if GLOBAL_LOGGING
-			writeDebugStreamLine("UserMode: %i", joystick.UserMode);
-			writeDebugStreamLine("StopPgm : %i", joystick.StopPgm);
-		#endif
+		if (!isAutonomousRunning) {
+			StartTask(autonomous);
+            isAutonomousRunning = true;
+		}
 
-		if ((joystick.UserMode == (bool)AUTONOMOUS_MODE) && GLOBAL_AUTONOMOUS) {
-			if (joystick.StopPgm == (bool)MODE_ENABLED) {
-				#if GLOBAL_LOGGING
-					writeDebugStreamLine("Autonomous in enabled state");
-				#endif
-
-				if (!isAutonomousRunning) {
-					StartTask(autonomous);
-					isAutonomousRunning = true;
-				}
-			}
-		} else if ((joystick.UserMode == (bool)TELEOP_MODE) && GLOBAL_TELEOP) {
-			if (joystick.StopPgm == (bool)MODE_ENABLED) {
-				#if GLOBAL_LOGGING
-					writeDebugStreamLine("Teleop in enabled state");
-				#endif
-
-				if (isAutonomousRunning) {
-					StopTask(autonomous);
-					isAutonomousRunning = false;
-				}
-
-				teleop();
-			}
+		if (!isJoystickInDeadzone()) {
+			StopTask(autonomous);
+			teleop();
 		}
 
 		wait1Msec(JOYSTICK_FETCH_DELAY_MS);

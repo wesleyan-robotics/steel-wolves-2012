@@ -16,7 +16,7 @@
 #define     MATCH_OVERRIDE  0
 
 #define    LOGGING_ENABLED  1
-#define AUTONOMOUS_ENABLED  0
+#define AUTONOMOUS_ENABLED  1
 #define     TELEOP_ENABLED  1
 
 #define    DRIVING_ENABLED  1
@@ -29,17 +29,16 @@
 #define GLOBAL_ACCORDION (ACCORDION_ENABLED || MATCH_OVERRIDE)
 
 /* NOTE: DO NOT MOVE THESE INCLUDES AROUND!!!
-         RobotC's retarded compilation will not work if the files
-         are moved around at all. Nor should you go and try including
-         each file in each other header file. I already tried that
-         and will only give you a mess of compiler errors.
-
-         For now, just leave this alone unless your adding another file.
-         If that is what you are doing, then it should probably just
-         be added to the end of the list unless something else relies
-         on it. Yes, this is a total mess with the header files, but it
-         is not my fault.
-*/
+ *       RobotC's retarded compilation will not work if the files
+ *       are moved around at all. Nor should you go and try including
+ *       each file in each other header file. I already tried that
+ *       and will only give you a mess of compiler errors.
+ *       For now, just leave this alone unless you're adding another file.
+ *       If that is what you are doing, then it should probably just
+ *       be added to the end of the list unless something else relies
+ *       on it. Yes, this is a total mess with the header files, but it
+ *       is not my fault.
+ */
 #include "JoystickDriver.c"
 #include "Motor.h"
 #include "Accordion.h"

@@ -227,7 +227,7 @@ task logSensorValues()
 task autonomous()
 {
 	driveToBoard();
-	traceLine();
+	//traceLine();
 	//placeRing();
 	setPower(0);
 }
