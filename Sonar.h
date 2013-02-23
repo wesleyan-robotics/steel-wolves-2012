@@ -35,7 +35,6 @@ const int BLACK_THRESHOLD_BOTTOM = 15;
 const int ACCORDION_DISTANCE  = 31;
 const int PLACE_RING_DISTANCE = 25;
 
-bool isAutonomousRunning = false;
 bool isLoggingSensorValues = false;
 
 /**
@@ -226,7 +225,15 @@ task logSensorValues()
 
 task autonomous()
 {
-	driveToBoard();
+#if !GLOBAL_AUTONOMOUS
+	return;
+#endif
+
+	// We have just about given up on the sensor detection so ya.
+	setPower(NORMAL_SPEED_FACTOR);
+	wait1Msec(2000);
+
+	//driveToBoard();
 	//traceLine();
 	//placeRing();
 	setPower(0);

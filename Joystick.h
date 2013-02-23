@@ -16,10 +16,10 @@ typedef enum {
 	BUTTON_A  = 1,
 	BUTTON_B  = 2,
 	BUTTON_Y  = 3,
-	BUTTON_LT = 7,
+	BUTTON_LB = 4,
 	BUTTON_RB = 5,
-	BUTTON_LB = 6,
-	BUTTON_RT = 4,
+	BUTTON_LT = 6,
+	BUTTON_RT = 7,
 	BUTTON_BACK  = 8,
 	BUTTON_START = 9
 } JoystickButtons;
@@ -44,6 +44,8 @@ const int DEADZONE = 5;
 const int JOYSTICK_FETCH_DELAY_MS = 150;
 
 float currentSpeedFactor = NORMAL_SPEED_FACTOR;
+ModeStatus globalStatus = MODE_DISABLED;
+MatchState globalMode = AUTONOMOUS_MODE;
 
 /**
  * Converts the joystick amount to a motor amount out of 100.
@@ -87,7 +89,6 @@ void calculateDirectionNormal(int vertical, int horizontal, DrivingState *state)
 
 bool isJoystickInDeadzone()
 {
-	DrivingState state;
 	int vertical = convertJoystickToMotor(joystick.joy1_y1);
 	int horizontal = convertJoystickToMotor(joystick.joy1_x2);
 
@@ -119,6 +120,17 @@ void setDirectionFromJoystick()
 	nxtDisplayTextLine(3, "lPower = %i", state.left);
 	nxtDisplayTextLine(4, "rPower = %i", state.right);
 #endif
+}
+
+bool isAccordionButtonPressed()
+{
+	switch (joystick.joy1_TopHat) {
+		case DPAD_UP:
+		case DPAD_DOWN:
+			return true;
+		default:
+			return false;
+	}
 }
 
 void setAccordionFromJoystick()
@@ -187,6 +199,10 @@ void setTurnInPlaceFromJoystick()
 
 void teleop()
 {
+#if !GLOBAL_TELEOP
+    return;
+#endif
+
 #if GLOBAL_DRIVING
 	setSpeedFromJoystick();
 
@@ -206,6 +222,8 @@ void teleop()
 #endif
 }
 
+bool hasAutonomousStarted = false;
+
 void run()
 {
 #if GLOBAL_LOGGING
@@ -216,14 +234,22 @@ void run()
 	while(true) {
 		getJoystickSettings(joystick);
 
-		if (!isAutonomousRunning) {
+		// Run the current status
+		if (globalMode == AUTONOMOUS_MODE && globalStatus == MODE_DISABLED && !hasAutonomousStarted) {
+			writeDebugStreamLine("Started autonomous mode task");
 			StartTask(autonomous);
-            isAutonomousRunning = true;
+			globalStatus = MODE_ENABLED;
+			hasAutonomousStarted = true;
+		} else if (globalMode == TELEOP_MODE && globalStatus == MODE_ENABLED) {
+			teleop();
 		}
 
-		if (!isJoystickInDeadzone()) {
+		// Switch to teleop mode if the joystick has been moved out of the deadzone
+		if (!isJoystickInDeadzone() && globalMode == AUTONOMOUS_MODE && globalStatus == MODE_ENABLED) {
+			writeDebugStreamLine("Switching to teleop mode");
 			StopTask(autonomous);
-			teleop();
+			globalMode = TELEOP_MODE;
+			globalStatus = MODE_ENABLED;
 		}
 
 		wait1Msec(JOYSTICK_FETCH_DELAY_MS);
