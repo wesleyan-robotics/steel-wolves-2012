@@ -1,7 +1,6 @@
 #ifndef JOYSTICK_H
 #define JOYSTICK_H
 
-#define TELEOP_MODE (joystick.UserMode == (bool)(TELEOP_MODE) && joystick.StopPgm == (bool)(MODE_ENABLED))
 // We are not bothing with autonomous since it does not work with the field control
 
 typedef enum {
@@ -236,9 +235,10 @@ void run()
 #if (defined(NXT) || defined(TETRIX)) && (_TARGET == "Robot") && !defined(NaturalLanguage)
 	while(true) {
 		getJoystickSettings(joystick);
+		teleopMode = joystick.UserMode == (bool)(TELEOP_MODE) && joystick.StopPgm == (bool)(MODE_ENABLED);
 
 		// Run the current status
-		if ((!isAutonomousRunning && !isTeleopRunning) && !TELEOP_MODE) {
+		if ((!isAutonomousRunning && !isTeleopRunning) && !teleopMode) {
 			writeDebugStreamLine("Started autonomous mode task");
 			StartTask(autonomous);
 			isAutonomousRunning = true;
@@ -247,7 +247,7 @@ void run()
 		}
 
 		// Switch to teleop mode if the joystick has been moved out of the deadzone
-		if (TELEOP_MODE || (isAutonomousRunning && !isTeleopRunning)) {
+		if (teleopMode && isAutonomousRunning && !isTeleopRunning) {
 			writeDebugStreamLine("Switching to teleop mode");
 			StopTask(autonomous);
 			isAutonomousRunning = false;
