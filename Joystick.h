@@ -1,6 +1,9 @@
 #ifndef JOYSTICK_H
 #define JOYSTICK_H
 
+#define TELEOP_MODE (joystick.UserMode == (bool)(TELEOP_MODE) && joystick.StopPgm == (bool)(MODE_ENABLED))
+// We are not bothing with autonomous since it does not work with the field control
+
 typedef enum {
 	DPAD_UP = 0,
 	DPAD_UP_RIGHT,
@@ -24,6 +27,12 @@ typedef enum {
 	BUTTON_START = 9
 } JoystickButtons;
 
+typedef struct {
+	int left;
+	int right;
+	DriveDirection direction;
+} DrivingState;
+
 typedef enum {
 	AUTONOMOUS_MODE = 0,
 	TELEOP_MODE = 1
@@ -34,18 +43,10 @@ typedef enum {
 	MODE_DISABLED = 1
 } ModeStatus;
 
-typedef struct {
-	int left;
-	int right;
-	DriveDirection direction;
-} DrivingState;
-
 const int DEADZONE = 5;
 const int JOYSTICK_FETCH_DELAY_MS = 150;
 
 float currentSpeedFactor = NORMAL_SPEED_FACTOR;
-ModeStatus globalStatus = MODE_DISABLED;
-MatchState globalMode = AUTONOMOUS_MODE;
 
 /**
  * Converts the joystick amount to a motor amount out of 100.
@@ -222,10 +223,12 @@ void teleop()
 #endif
 }
 
-bool hasAutonomousStarted = false;
-
 void run()
 {
+	bool isAutonomousRunning = false;
+	bool isTeleopRunning = false;
+	bool teleopMode = false;
+
 #if GLOBAL_LOGGING
 	StartTask(logSensorValues);
 #endif
@@ -235,21 +238,20 @@ void run()
 		getJoystickSettings(joystick);
 
 		// Run the current status
-		if (globalMode == AUTONOMOUS_MODE && globalStatus == MODE_DISABLED && !hasAutonomousStarted) {
+		if ((!isAutonomousRunning && !isTeleopRunning) && !TELEOP_MODE) {
 			writeDebugStreamLine("Started autonomous mode task");
 			StartTask(autonomous);
-			globalStatus = MODE_ENABLED;
-			hasAutonomousStarted = true;
-		} else if (globalMode == TELEOP_MODE && globalStatus == MODE_ENABLED) {
+			isAutonomousRunning = true;
+		} else if (!isAutonomousRunning && isTeleopRunning) {
 			teleop();
 		}
 
 		// Switch to teleop mode if the joystick has been moved out of the deadzone
-		if (!isJoystickInDeadzone() && globalMode == AUTONOMOUS_MODE && globalStatus == MODE_ENABLED) {
+		if (TELEOP_MODE || (isAutonomousRunning && !isTeleopRunning)) {
 			writeDebugStreamLine("Switching to teleop mode");
 			StopTask(autonomous);
-			globalMode = TELEOP_MODE;
-			globalStatus = MODE_ENABLED;
+			isAutonomousRunning = false;
+			isTeleopRunning = true;
 		}
 
 		wait1Msec(JOYSTICK_FETCH_DELAY_MS);

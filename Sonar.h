@@ -230,8 +230,8 @@ task autonomous()
 #endif
 
 	// We have just about given up on the sensor detection so ya.
-	setPower(NORMAL_SPEED_FACTOR);
-	wait1Msec(2000);
+	setPower(NORMAL_SPEED_FACTOR * 100);
+	wait1Msec(4000);
 
 	//driveToBoard();
 	//traceLine();
