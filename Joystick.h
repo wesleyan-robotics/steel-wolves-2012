@@ -239,19 +239,22 @@ void run()
 
 		// Run the current status
 		if ((!isAutonomousRunning && !isTeleopRunning) && !teleopMode) {
-			writeDebugStreamLine("Started autonomous mode task");
-			StartTask(autonomous);
+			setPower(NORMAL_SPEED_FACTOR * 100);
+			wait1Msec(4000);
+			setPower(0);
 			isAutonomousRunning = true;
+			// TODO: don't know why it keeps lifting up the accordion
 		} else if (!isAutonomousRunning && isTeleopRunning) {
 			teleop();
 		}
 
 		// Switch to teleop mode if the joystick has been moved out of the deadzone
-		if (teleopMode && isAutonomousRunning && !isTeleopRunning) {
+		if (teleopMode || (isAutonomousRunning && !isTeleopRunning)) {
 			writeDebugStreamLine("Switching to teleop mode");
 			StopTask(autonomous);
 			isAutonomousRunning = false;
 			isTeleopRunning = true;
+			teleop();
 		}
 
 		wait1Msec(JOYSTICK_FETCH_DELAY_MS);
