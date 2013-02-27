@@ -242,10 +242,7 @@ void run()
 				hasAutonomousRan = true;
 			} else if (!teleopMode)  {
 				writeDebugStreamLine("[MODE]: Running autonomous");
-				setPower(NORMAL_SPEED_FACTOR * 100);
-				wait1Msec(4000);
-				setPower(0);
-				hasAutonomousRan = true;
+				autonomous();
 				writeDebugStreamLine("[MODE]: Autonomous finished");
 			}
 			continue;

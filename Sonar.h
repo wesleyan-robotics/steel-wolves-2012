@@ -223,13 +223,13 @@ task logSensorValues()
 	}
 }
 
-task autonomous()
+void autonomous()
 {
 #if !GLOBAL_AUTONOMOUS
 	return;
 #endif
 
-	// We have just about given up on the sensor detection so ya.
+	// We have just about given up on the sensor detection so ya
 	setPower(NORMAL_SPEED_FACTOR * 100);
 	wait1Msec(4000);
 
