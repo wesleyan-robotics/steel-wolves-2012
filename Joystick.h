@@ -224,8 +224,7 @@ void teleop()
 
 void run()
 {
-	bool isAutonomousRunning = false;
-	bool isTeleopRunning = false;
+	bool hasAutonomousRan = false;
 	bool teleopMode = false;
 
 #if GLOBAL_LOGGING
@@ -237,23 +236,23 @@ void run()
 		getJoystickSettings(joystick);
 		teleopMode = joystick.UserMode == (bool)(TELEOP_MODE) && joystick.StopPgm == (bool)(MODE_ENABLED);
 
-		// Run the current status
-		if ((!isAutonomousRunning && !isTeleopRunning) && !teleopMode) {
-			setPower(NORMAL_SPEED_FACTOR * 100);
-			wait1Msec(4000);
-			setPower(0);
-			isAutonomousRunning = true;
-			// TODO: don't know why it keeps lifting up the accordion
-		} else if (!isAutonomousRunning && isTeleopRunning) {
-			teleop();
+		if (!hasAutonomousRan) {
+			if (teleopMode) {
+				// We are already in teleop mode so autonomous already ran
+				hasAutonomousRan = true;
+			} else if (!teleopMode)  {
+				writeDebugStreamLine("[MODE]: Running autonomous");
+				setPower(NORMAL_SPEED_FACTOR * 100);
+				wait1Msec(4000);
+				setPower(0);
+				hasAutonomousRan = true;
+				writeDebugStreamLine("[MODE]: Autonomous finished");
+			}
+			continue;
 		}
 
-		// Switch to teleop mode if the joystick has been moved out of the deadzone
-		if (teleopMode || (isAutonomousRunning && !isTeleopRunning)) {
-			writeDebugStreamLine("Switching to teleop mode");
-			StopTask(autonomous);
-			isAutonomousRunning = false;
-			isTeleopRunning = true;
+		if (hasAutonomousRan && teleopMode) {
+			writeDebugStreamLine("[MODE]: Running teleop");
 			teleop();
 		}
 
